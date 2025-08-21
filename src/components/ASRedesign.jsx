@@ -267,7 +267,8 @@ const ASRedesign = () => {
       duration: { zh: '2 分钟', en: '2 min' },
       icon: '📖',
       category: { zh: '基础知识', en: 'Basics' },
-      completed: true
+      completed: true,
+      url: 'https://www.mayoclinic.org/zh-hans/diseases-conditions/ankylosing-spondylitis/symptoms-causes/syc-20354808'
     },
     {
       id: 2,
@@ -275,7 +276,8 @@ const ASRedesign = () => {
       duration: { zh: '5 分钟', en: '5 min' },
       icon: '🏃‍♂️',
       category: { zh: '运动康复', en: 'Exercise' },
-      completed: false
+      completed: false,
+      url: 'https://m.qlyyqd.com/jktj/2018/9av2wLaG.html'
     },
     {
       id: 3,
@@ -283,7 +285,8 @@ const ASRedesign = () => {
       duration: { zh: '3 分钟', en: '3 min' },
       icon: '💊',
       category: { zh: '用药指南', en: 'Medication' },
-      completed: false
+      completed: false,
+      url: '#'
     },
     {
       id: 4,
@@ -291,7 +294,8 @@ const ASRedesign = () => {
       duration: { zh: '4 分钟', en: '4 min' },
       icon: '🥗',
       category: { zh: '营养饮食', en: 'Nutrition' },
-      completed: true
+      completed: true,
+      url: '#'
     }
   ];
 
@@ -550,7 +554,15 @@ const ASRedesign = () => {
         
         <div className="space-y-3">
           {educationContent.slice(0, 2).map((item) => (
-            <div key={item.id} className={`flex items-center p-4 ${isDark ? 'bg-gray-700' : 'bg-gray-50'} rounded-xl hover:${isDark ? 'bg-gray-600' : 'bg-gray-100'} transition-all duration-200 cursor-pointer group`}>
+            <div 
+              key={item.id} 
+              className={`flex items-center p-4 ${isDark ? 'bg-gray-700' : 'bg-gray-50'} rounded-xl hover:${isDark ? 'bg-gray-600' : 'bg-gray-100'} transition-all duration-200 cursor-pointer group`}
+              onClick={() => {
+                if (item.url && item.url !== '#') {
+                  window.open(item.url, '_blank');
+                }
+              }}
+            >
               <div className={`flex items-center justify-center w-12 h-12 bg-gradient-to-br ${currentTheme.secondary} rounded-xl mr-4 text-white text-xl`}>
                 {item.icon}
               </div>
@@ -655,7 +667,15 @@ const ASRedesign = () => {
           </div>
         )}
       </div>
-      <button className="w-full bg-gradient-to-r from-blue-500 to-purple-600 text-white py-4 rounded-2xl font-bold text-lg hover:from-blue-600 hover:to-purple-700 transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-105">{t[language].saveRecord}</button>
+      <button 
+        onClick={() => {
+          // 模拟保存记录功能
+          alert(language === 'zh' ? '记录已保存！' : 'Record saved!');
+        }}
+        className="w-full bg-gradient-to-r from-blue-500 to-purple-600 text-white py-4 rounded-2xl font-bold text-lg hover:from-blue-600 hover:to-purple-700 transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-105"
+      >
+        {t[language].saveRecord}
+      </button>
     </div>
   );
 
@@ -704,13 +724,108 @@ const ASRedesign = () => {
               )}
             </div>
             <div className="flex gap-3">
-              <button className="flex-1 bg-green-500 text-white py-2 rounded-xl font-medium hover:bg-green-600 transition-colors">{t[language].takeMed}</button>
-              <button className={`flex-1 ${isDark ? 'bg-gray-700 text-gray-300' : 'bg-gray-100 text-gray-700'} py-2 rounded-xl font-medium hover:bg-gray-200 transition-colors`}>{t[language].skipMed}</button>
+              <button 
+                onClick={() => {
+                  // 模拟已用药功能
+                  alert(language === 'zh' ? '已记录用药！' : 'Medication taken recorded!');
+                }}
+                className="flex-1 bg-green-500 text-white py-2 rounded-xl font-medium hover:bg-green-600 transition-colors"
+              >
+                {t[language].takeMed}
+              </button>
+              <button 
+                onClick={() => {
+                  // 模拟跳过用药功能
+                  alert(language === 'zh' ? '已记录跳过用药！' : 'Medication skip recorded!');
+                }}
+                className={`flex-1 ${isDark ? 'bg-gray-700 text-gray-300' : 'bg-gray-100 text-gray-700'} py-2 rounded-xl font-medium hover:bg-gray-200 transition-colors`}
+              >
+                {t[language].skipMed}
+              </button>
+              <button 
+                onClick={() => handleDeleteMedication(med.id)}
+                className="px-3 py-2 bg-red-500 text-white rounded-xl font-medium hover:bg-red-600 transition-colors"
+              >
+                <Trash2 size={16} />
+              </button>
             </div>
           </div>
         ))}
       </div>
-      <div className={`${cardClass} rounded-2xl p-6 shadow-sm border-2 border-dashed ${isDark ? 'border-gray-600' : 'border-gray-300'} text-center hover:border-blue-400 transition-colors cursor-pointer`}>
+      
+      {/* 添加药物表单 */}
+      {showAddMed && (
+        <div className={`${cardClass} rounded-2xl p-6 shadow-sm border`}>
+          <h3 className={`text-lg font-bold ${textClass} mb-4`}>{t[language].addMedication}</h3>
+          <div className="space-y-4">
+            <div>
+              <label className={`block text-sm font-medium ${textClass} mb-2`}>{t[language].medicationName}</label>
+              <input
+                type="text"
+                value={newMedication.name}
+                onChange={(e) => setNewMedication({...newMedication, name: e.target.value})}
+                className={`w-full px-3 py-2 border rounded-lg ${isDark ? 'bg-gray-700 border-gray-600' : 'bg-white border-gray-300'} focus:outline-none focus:ring-2 focus:ring-blue-500`}
+                placeholder={language === 'zh' ? '输入药物名称' : 'Enter medication name'}
+              />
+            </div>
+            <div>
+              <label className={`block text-sm font-medium ${textClass} mb-2`}>{t[language].medicationType}</label>
+              <select
+                value={newMedication.type}
+                onChange={(e) => setNewMedication({...newMedication, type: e.target.value})}
+                className={`w-full px-3 py-2 border rounded-lg ${isDark ? 'bg-gray-700 border-gray-600' : 'bg-white border-gray-300'} focus:outline-none focus:ring-2 focus:ring-blue-500`}
+              >
+                <option value="NSAID">NSAID</option>
+                <option value="TNFi">TNFi</option>
+                <option value="DMARD">DMARD</option>
+                <option value="Other">Other</option>
+              </select>
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className={`block text-sm font-medium ${textClass} mb-2`}>{t[language].dosage}</label>
+                <input
+                  type="text"
+                  value={newMedication.dosage}
+                  onChange={(e) => setNewMedication({...newMedication, dosage: e.target.value})}
+                  className={`w-full px-3 py-2 border rounded-lg ${isDark ? 'bg-gray-700 border-gray-600' : 'bg-white border-gray-300'} focus:outline-none focus:ring-2 focus:ring-blue-500`}
+                  placeholder={language === 'zh' ? '如：200mg' : 'e.g., 200mg'}
+                />
+              </div>
+              <div>
+                <label className={`block text-sm font-medium ${textClass} mb-2`}>{t[language].frequency}</label>
+                <input
+                  type="text"
+                  value={newMedication.frequency}
+                  onChange={(e) => setNewMedication({...newMedication, frequency: e.target.value})}
+                  className={`w-full px-3 py-2 border rounded-lg ${isDark ? 'bg-gray-700 border-gray-600' : 'bg-white border-gray-300'} focus:outline-none focus:ring-2 focus:ring-blue-500`}
+                  placeholder={language === 'zh' ? '如：每日2次' : 'e.g., Twice daily'}
+                />
+              </div>
+            </div>
+            <div className="flex gap-3">
+              <button
+                onClick={handleAddMedication}
+                disabled={!newMedication.name.trim()}
+                className={`flex-1 bg-gradient-to-r ${currentTheme.primary} text-white py-2 rounded-xl font-medium hover:opacity-90 transition-opacity disabled:opacity-50`}
+              >
+                {t[language].save}
+              </button>
+              <button
+                onClick={() => setShowAddMed(false)}
+                className={`flex-1 ${isDark ? 'bg-gray-700 text-gray-300' : 'bg-gray-100 text-gray-700'} py-2 rounded-xl font-medium hover:bg-gray-200 transition-colors`}
+              >
+                {t[language].cancel}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+      
+      <div 
+        className={`${cardClass} rounded-2xl p-6 shadow-sm border-2 border-dashed ${isDark ? 'border-gray-600' : 'border-gray-300'} text-center hover:border-blue-400 transition-colors cursor-pointer`}
+        onClick={() => setShowAddMed(true)}
+      >
         <Plus className={`mx-auto mb-2 ${subtextClass}`} size={24} />
         <p className={`${subtextClass} font-medium`}>{t[language].addMedication}</p>
       </div>
@@ -728,10 +843,29 @@ const ASRedesign = () => {
       <div className="flex items-center justify-between">
         <h1 className={`text-2xl font-bold ${textClass}`}>{t[language].reports}</h1>
         <div className="flex gap-2">
-          <button className={`p-2 ${cardClass} rounded-xl shadow-sm border hover:shadow-md transition-all`}>
+          <button 
+            onClick={() => {
+              // 模拟导出PDF功能
+              alert(language === 'zh' ? '正在导出PDF报告...' : 'Exporting PDF report...');
+            }}
+            className={`p-2 ${cardClass} rounded-xl shadow-sm border hover:shadow-md transition-all`}
+          >
             <Download size={20} className={`${subtextClass}`} />
           </button>
-          <button className={`p-2 ${cardClass} rounded-xl shadow-sm border hover:shadow-md transition-all`}>
+          <button 
+            onClick={() => {
+              // 模拟分享功能
+              if (navigator.share) {
+                navigator.share({
+                  title: language === 'zh' ? 'AS健康报告' : 'AS Health Report',
+                  text: language === 'zh' ? '查看我的健康数据趋势' : 'Check out my health data trends'
+                });
+              } else {
+                alert(language === 'zh' ? '复制链接成功！' : 'Link copied successfully!');
+              }
+            }}
+            className={`p-2 ${cardClass} rounded-xl shadow-sm border hover:shadow-md transition-all`}
+          >
             <Share2 size={20} className={`${subtextClass}`} />
           </button>
         </div>
@@ -884,7 +1018,15 @@ const ASRedesign = () => {
         {/* Content List */}
         <div className="space-y-4">
           {filteredContent.map((item) => (
-            <div key={item.id} className={`${cardClass} rounded-2xl p-4 shadow-sm border hover:shadow-lg transition-all duration-200 cursor-pointer group`}>
+            <div 
+              key={item.id} 
+              className={`${cardClass} rounded-2xl p-4 shadow-sm border hover:shadow-lg transition-all duration-200 cursor-pointer group`}
+              onClick={() => {
+                if (item.url && item.url !== '#') {
+                  window.open(item.url, '_blank');
+                }
+              }}
+            >
               <div className="flex items-center">
                 <div className={`flex items-center justify-center w-14 h-14 bg-gradient-to-br ${currentTheme.secondary} rounded-xl mr-4 text-white text-2xl relative`}>
                   {item.icon}
