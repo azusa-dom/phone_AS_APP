@@ -1,36 +1,40 @@
 import React, { useState } from 'react';
-import { Home, Calendar, Pill, TrendingUp, Book, Plus, ChevronRight, Bell, Download, Share2, AlertCircle, Clock, Target, Activity, Heart, User, Shield, Palette, LineChart, Zap } from 'lucide-react';
+import { Home, Calendar, Pill, TrendingUp, Book, Plus, ChevronRight, Bell, Download, Share2, AlertCircle, Clock, Target, Activity, Heart, User, Shield, Palette, LineChart, Zap, MessageCircle, Send, Bot } from 'lucide-react';
 import { LineChart as RechartsLineChart, Line, AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart as RechartsBarChart, Bar } from 'recharts';
 
 const ASRedesign = () => {
   const [currentPage, setCurrentPage] = useState('home');
   const [language, setLanguage] = useState('zh');
   const [theme, setTheme] = useState('light');
+  const [themeColor, setThemeColor] = useState('blue'); // blue, purple, green, orange
   const [painLevel, setPainLevel] = useState(3);
   const [stiffnessTime, setStiffnessTime] = useState(30);
   const [fatigue, setFatigue] = useState(3);
   const [isFlare, setIsFlare] = useState(false);
   const [selectedTriggers, setSelectedTriggers] = useState([]);
+  const [showAddMed, setShowAddMed] = useState(false);
+  const [chatMessages, setChatMessages] = useState([]);
+  const [chatInput, setChatInput] = useState('');
   const [medications, setMedications] = useState([
-    { id: 1, name: 'Adalimumab', type: 'TNFi', dosage: '40mg', frequency: '每2周', nextDose: '2025-08-23', adherence: 95, sideEffects: [] },
-    { id: 2, name: 'Celecoxib', type: 'NSAID', dosage: '200mg', frequency: '每日2次', nextDose: '2025-08-22', adherence: 88, sideEffects: ['胃痛'] }
+    { id: 1, name: 'Adalimumab', type: 'TNFi', dosage: '40mg', frequency: language === 'zh' ? '每2周' : 'Every 2 weeks', nextDose: '2025-08-23', adherence: 95, sideEffects: [] },
+    { id: 2, name: 'Celecoxib', type: 'NSAID', dosage: '200mg', frequency: language === 'zh' ? '每日2次' : 'Twice daily', nextDose: '2025-08-22', adherence: 88, sideEffects: language === 'zh' ? ['胃痛'] : ['Stomach pain'] }
   ]);
 
   const weeklyData = [
-    { day: '周一', pain: 4, stiffness: 45, fatigue: 3 },
-    { day: '周二', pain: 3, stiffness: 30, fatigue: 2 },
-    { day: '周三', pain: 5, stiffness: 60, fatigue: 4 },
-    { day: '周四', pain: 2, stiffness: 15, fatigue: 2 },
-    { day: '周五', pain: 3, stiffness: 30, fatigue: 3 },
-    { day: '周六', pain: 1, stiffness: 10, fatigue: 1 },
-    { day: '周日', pain: 2, stiffness: 20, fatigue: 2 }
+    { day: language === 'zh' ? '周一' : 'Mon', pain: 4, stiffness: 45, fatigue: 3 },
+    { day: language === 'zh' ? '周二' : 'Tue', pain: 3, stiffness: 30, fatigue: 2 },
+    { day: language === 'zh' ? '周三' : 'Wed', pain: 5, stiffness: 60, fatigue: 4 },
+    { day: language === 'zh' ? '周四' : 'Thu', pain: 2, stiffness: 15, fatigue: 2 },
+    { day: language === 'zh' ? '周五' : 'Fri', pain: 3, stiffness: 30, fatigue: 3 },
+    { day: language === 'zh' ? '周六' : 'Sat', pain: 1, stiffness: 10, fatigue: 1 },
+    { day: language === 'zh' ? '周日' : 'Sun', pain: 2, stiffness: 20, fatigue: 2 }
   ];
 
   const flareData = [
-    { trigger: '睡眠不足', count: 8, color: '#EF4444' },
-    { trigger: '天气变化', count: 5, color: '#F59E0B' },
-    { trigger: '工作压力', count: 4, color: '#8B5CF6' },
-    { trigger: '过度劳累', count: 3, color: '#06B6D4' }
+    { trigger: language === 'zh' ? '睡眠不足' : 'Sleep deprivation', count: 8, color: '#EF4444' },
+    { trigger: language === 'zh' ? '天气变化' : 'Weather changes', count: 5, color: '#F59E0B' },
+    { trigger: language === 'zh' ? '工作压力' : 'Work stress', count: 4, color: '#8B5CF6' },
+    { trigger: language === 'zh' ? '过度劳累' : 'Overexertion', count: 3, color: '#06B6D4' }
   ];
 
   const t = {
@@ -40,7 +44,8 @@ const ASRedesign = () => {
       weekSummary: '本周记录', avgPain: '疼痛均值', checkInDays: '打卡天数', flareCount: '发作次数', microLearning: '健康微课', minutes: '分钟',
       addMedication: '添加药物', medicationName: '药物名称', dosageFrequency: '剂量/频率', nextDose: '下次用药', adherence: '依从性', sideEffects: '副作用', noSideEffects: '无副作用', takeMed: '已用药', skipMed: '跳过',
       weeklyTrends: '本周趋势', monthlyReport: '月度报告', exportPDF: '导出PDF', shareReport: '分享报告', painTrend: '疼痛趋势', flareAnalysis: '发作分析', triggerAnalysis: '诱因分析',
-      appearance: '外观设置', privacy: '隐私设置', notifications: '通知设置', language: '语言', darkMode: '深色模式', fontSize: '字体大小', dataExport: '数据导出', dataImport: '数据导入', about: '关于应用'
+      appearance: '外观设置', privacy: '隐私设置', notifications: '通知设置', language: '语言', darkMode: '深色模式', fontSize: '字体大小', dataExport: '数据导出', dataImport: '数据导入', about: '关于应用',
+      themeColor: '主题颜色', aiChat: 'AI助手', aiDisclaimer: '⚠️ AI回答仅供参考，请遵循医生建议', askAI: '向AI提问', chatPlaceholder: '请输入您的问题...'
     },
     en: {
       home: 'Today', track: 'Tracking', meds: 'Medication', reports: 'Reports', library: 'Education', settings: 'Settings',
@@ -48,7 +53,8 @@ const ASRedesign = () => {
       weekSummary: 'Weekly Summary', avgPain: 'Avg Pain', checkInDays: 'Check-in Days', flareCount: 'Flare Count', microLearning: 'Health Tips', minutes: 'minutes',
       addMedication: 'Add Medication', medicationName: 'Medication Name', dosageFrequency: 'Dosage/Frequency', nextDose: 'Next Dose', adherence: 'Adherence', sideEffects: 'Side Effects', noSideEffects: 'No Side Effects', takeMed: 'Take Med', skipMed: 'Skip',
       weeklyTrends: 'Weekly Trends', monthlyReport: 'Monthly Report', exportPDF: 'Export PDF', shareReport: 'Share Report', painTrend: 'Pain Trend', flareAnalysis: 'Flare Analysis', triggerAnalysis: 'Trigger Analysis',
-      appearance: 'Appearance', privacy: 'Privacy', notifications: 'Notifications', language: 'Language', darkMode: 'Dark Mode', fontSize: 'Font Size', dataExport: 'Data Export', dataImport: 'Data Import', about: 'About'
+      appearance: 'Appearance', privacy: 'Privacy', notifications: 'Notifications', language: 'Language', darkMode: 'Dark Mode', fontSize: 'Font Size', dataExport: 'Data Export', dataImport: 'Data Import', about: 'About',
+      themeColor: 'Theme Color', aiChat: 'AI Assistant', aiDisclaimer: '⚠️ AI responses are for reference only. Please follow medical advice.', askAI: 'Ask AI', chatPlaceholder: 'Enter your question...'
     }
   };
 
@@ -79,21 +85,73 @@ const ASRedesign = () => {
   const textClass = isDark ? 'text-white' : 'text-gray-900';
   const subtextClass = isDark ? 'text-gray-300' : 'text-gray-500';
 
+  // 主题色配置
+  const themeColors = {
+    blue: { primary: 'bg-blue-500', gradient: 'from-blue-500 to-blue-600', text: 'text-blue-500', border: 'border-blue-500' },
+    purple: { primary: 'bg-purple-500', gradient: 'from-purple-500 to-purple-600', text: 'text-purple-500', border: 'border-purple-500' },
+    green: { primary: 'bg-green-500', gradient: 'from-green-500 to-green-600', text: 'text-green-500', border: 'border-green-500' },
+    orange: { primary: 'bg-orange-500', gradient: 'from-orange-500 to-orange-600', text: 'text-orange-500', border: 'border-orange-500' }
+  };
+  const currentTheme = themeColors[themeColor];
+
   const toggleTrigger = (triggerId) => {
     setSelectedTriggers(prev => prev.includes(triggerId) ? prev.filter(id => id !== triggerId) : [...prev, triggerId]);
   };
 
+  // 模拟AI回复
+  const aiResponses = {
+    zh: {
+      '疼痛': '对于强直性脊柱炎的疼痛管理，建议：1）按医嘱服用抗炎药物 2）进行适度的拉伸运动 3）保持正确的姿势。⚠️ 仅供参考，请遵循医生建议。',
+      '运动': 'AS患者适合的运动包括：游泳、太极、瑜伽和脊柱拉伸操。避免高冲击性运动。建议咨询理疗师制定个人化运动计划。',
+      '饮食': '抗炎饮食建议：多食用富含Omega-3的鱼类、新鲜蔬果、全谷物。减少糖分、加工食品和饱和脂肪摄入。',
+      'default': '很抱歉，我无法回答这个问题。建议您咨询专业医生获得准确的医疗建议。⚠️ AI回答仅供参考。'
+    },
+    en: {
+      'pain': 'For AS pain management: 1) Take anti-inflammatory medications as prescribed 2) Perform gentle stretching exercises 3) Maintain good posture. ⚠️ For reference only, please follow medical advice.',
+      'exercise': 'Suitable exercises for AS include: swimming, tai chi, yoga, and spinal stretching. Avoid high-impact activities. Consult a physiotherapist for personalized plans.',
+      'diet': 'Anti-inflammatory diet: Include omega-3 rich fish, fresh fruits/vegetables, whole grains. Reduce sugar, processed foods, and saturated fats.',
+      'default': 'Sorry, I cannot answer this question. Please consult a healthcare professional for accurate medical advice. ⚠️ AI responses are for reference only.'
+    }
+  };
+
+  const sendMessage = () => {
+    if (!chatInput.trim()) return;
+    
+    const userMessage = { id: Date.now(), type: 'user', content: chatInput };
+    setChatMessages(prev => [...prev, userMessage]);
+    
+    // 模拟AI回复
+    setTimeout(() => {
+      let response = aiResponses[language].default;
+      const input = chatInput.toLowerCase();
+      
+      if (input.includes('疼痛') || input.includes('pain')) {
+        response = aiResponses[language]['疼痛'] || aiResponses[language]['pain'];
+      } else if (input.includes('运动') || input.includes('exercise')) {
+        response = aiResponses[language]['运动'] || aiResponses[language]['exercise'];
+      } else if (input.includes('饮食') || input.includes('diet')) {
+        response = aiResponses[language]['饮食'] || aiResponses[language]['diet'];
+      }
+      
+      const aiMessage = { id: Date.now() + 1, type: 'ai', content: response };
+      setChatMessages(prev => [...prev, aiMessage]);
+    }, 1000);
+    
+    setChatInput('');
+  };
+
   const NavBar = () => (
     <div className={`fixed bottom-0 left-0 right-0 ${isDark ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'} border-t px-2 py-2 backdrop-blur-lg bg-opacity-95`}>
-      <div className="flex justify-around">
+      <div className="grid grid-cols-6 gap-1">
         {[
           { id: 'home', icon: Home, label: t[language].home },
           { id: 'track', icon: Calendar, label: t[language].track },
           { id: 'meds', icon: Pill, label: t[language].meds },
           { id: 'reports', icon: TrendingUp, label: t[language].reports },
-          { id: 'library', icon: Book, label: t[language].library }
+          { id: 'library', icon: Book, label: t[language].library },
+          { id: 'ai', icon: Bot, label: t[language].aiChat }
         ].map(({ id, icon: Icon, label }) => (
-          <button key={id} onClick={() => setCurrentPage(id)} className={`flex flex-col items-center py-2 px-3 rounded-xl transition-all duration-200 ${currentPage === id ? 'bg-gradient-to-b from-blue-500 to-blue-600 text-white shadow-lg transform scale-105' : `${subtextClass} hover:${textClass} ${isDark ? 'hover:bg-gray-700' : 'hover:bg-gray-100'}`}`}>
+          <button key={id} onClick={() => setCurrentPage(id)} className={`flex flex-col items-center py-2 px-3 rounded-xl transition-all duration-200 ${currentPage === id ? `bg-gradient-to-b ${currentTheme.gradient} text-white shadow-lg transform scale-105` : `${subtextClass} hover:${textClass} ${isDark ? 'hover:bg-gray-700' : 'hover:bg-gray-100'}`}`}>
             <Icon size={20} />
             <span className="text-xs mt-1 font-medium">{label}</span>
           </button>
@@ -251,7 +309,13 @@ const ASRedesign = () => {
           <Zap className="mr-2 text-yellow-500" size={20} />
           {t[language].fatigue} (0-10): {fatigue} {fatigueEmojis[fatigue]}
         </label>
-        <input type="range" min="0" max="10" value={fatigue} onChange={(e) => setFatigue(Number(e.target.value))} className="w-full h-4 bg-gray-200 rounded-lg appearance-none cursor-pointer" />
+        <div className="relative mb-4">
+          <input type="range" min="0" max="10" value={fatigue} onChange={(e) => setFatigue(Number(e.target.value))} className="w-full h-4 bg-gray-200 rounded-lg appearance-none cursor-pointer slider" style={{ background: `linear-gradient(to right, #10B981 0%, #F59E0B ${fatigue * 10}%, #EF4444 100%)` }} />
+        </div>
+        <div className={`flex justify-between text-sm ${subtextClass}`}>
+          <span>😊 {language === 'zh' ? '精力充沛' : 'Energetic'}</span>
+          <span>😵 {language === 'zh' ? '极度疲劳' : 'Exhausted'}</span>
+        </div>
       </div>
       <div className={`${cardClass} rounded-2xl p-6 shadow-sm border`}>
         <div className="flex items-center justify-between mb-4">
@@ -285,7 +349,7 @@ const ASRedesign = () => {
     <div className={`p-4 pb-20 space-y-6 ${bgClass} min-h-screen`}>
       <div className="flex items-center justify-between">
         <h1 className={`text-2xl font-bold ${textClass}`}>{t[language].meds}</h1>
-        <button className="bg-gradient-to-r from-blue-500 to-purple-600 text-white p-3 rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 transform hover:scale-105"><Plus size={20} /></button>
+        <button onClick={() => setShowAddMed(true)} className={`bg-gradient-to-r ${currentTheme.gradient} text-white p-3 rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 transform hover:scale-105`}><Plus size={20} /></button>
       </div>
       <div className="space-y-4">
         {medications.map((med) => (
@@ -449,6 +513,62 @@ const ASRedesign = () => {
     );
   };
 
+  const AIChatPage = () => (
+    <div className={`p-4 pb-20 ${bgClass} min-h-screen`}>
+      <h1 className={`text-2xl font-bold ${textClass} mb-6`}>{t[language].aiChat}</h1>
+      
+      {/* AI免责声明 */}
+      <div className={`p-4 mb-6 bg-yellow-50 ${isDark ? 'bg-yellow-900/20' : ''} border border-yellow-200 rounded-xl`}>
+        <p className={`text-sm ${isDark ? 'text-yellow-200' : 'text-yellow-800'}`}>
+          {t[language].aiDisclaimer}
+        </p>
+      </div>
+
+      {/* 聊天消息 */}
+      <div className={`flex-1 space-y-4 mb-6 max-h-96 overflow-y-auto`}>
+        {chatMessages.length === 0 ? (
+          <div className={`text-center ${subtextClass} py-8`}>
+            <Bot size={48} className="mx-auto mb-4 opacity-50" />
+            <p>{language === 'zh' ? '您好！我是AS健康助手，有什么可以帮助您的吗？' : 'Hello! I\'m the AS Health Assistant. How can I help you?'}</p>
+          </div>
+        ) : (
+          chatMessages.map((message) => (
+            <div key={message.id} className={`flex ${message.type === 'user' ? 'justify-end' : 'justify-start'}`}>
+              <div className={`max-w-xs lg:max-w-md px-4 py-2 rounded-2xl ${
+                message.type === 'user' 
+                  ? `bg-gradient-to-r ${currentTheme.gradient} text-white` 
+                  : `${cardClass} border`
+              }`}>
+                <p className="text-sm">{message.content}</p>
+              </div>
+            </div>
+          ))
+        )}
+      </div>
+
+      {/* 输入框 */}
+      <div className={`${cardClass} rounded-2xl p-4 border`}>
+        <div className="flex gap-2">
+          <input
+            type="text"
+            value={chatInput}
+            onChange={(e) => setChatInput(e.target.value)}
+            onKeyPress={(e) => e.key === 'Enter' && sendMessage()}
+            placeholder={t[language].chatPlaceholder}
+            className={`flex-1 px-3 py-2 rounded-lg border ${isDark ? 'bg-gray-700 border-gray-600' : 'bg-gray-50 border-gray-300'} focus:outline-none focus:ring-2 focus:ring-blue-500`}
+          />
+          <button
+            onClick={sendMessage}
+            disabled={!chatInput.trim()}
+            className={`px-4 py-2 bg-gradient-to-r ${currentTheme.gradient} text-white rounded-lg hover:opacity-90 transition-opacity disabled:opacity-50`}
+          >
+            <Send size={16} />
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+
   const SettingsPage = () => (
     <div className={`p-4 pb-20 space-y-6 ${bgClass} min-h-screen`}>
       <h1 className={`text-2xl font-bold ${textClass} mb-6`}>{t[language].settings}</h1>
@@ -467,6 +587,14 @@ const ASRedesign = () => {
               <option value="zh">中文</option>
               <option value="en">English</option>
             </select>
+          </div>
+          <div className="flex items-center justify-between">
+            <span className={`${textClass} font-medium`}>{t[language].themeColor}</span>
+            <div className="flex gap-2">
+              {Object.keys(themeColors).map(color => (
+                <button key={color} onClick={() => setThemeColor(color)} className={`w-6 h-6 rounded-full ${themeColors[color].primary} ${themeColor === color ? 'ring-2 ring-offset-2 ring-gray-400' : ''}`} />
+              ))}
+            </div>
           </div>
         </div>
       </div>
@@ -514,6 +642,7 @@ const ASRedesign = () => {
       case 'meds': return <MedsPage />;
       case 'reports': return <ReportsPage />;
       case 'library': return <LibraryPage />;
+      case 'ai': return <AIChatPage />;
       case 'settings': return <SettingsPage />;
       default: return <HomePage />;
     }
