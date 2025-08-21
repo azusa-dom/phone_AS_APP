@@ -763,7 +763,11 @@ const ASRedesign = () => {
               <input
                 type="text"
                 value={newMedication.name}
-                onChange={(e) => setNewMedication({...newMedication, name: e.target.value})}
+                onChange={(e) => {
+                  const value = e.target.value;
+                  console.log('药物名称输入:', value);
+                  setNewMedication(prev => ({...prev, name: value}));
+                }}
                 className={`w-full px-3 py-2 border rounded-lg ${isDark ? 'bg-gray-700 border-gray-600' : 'bg-white border-gray-300'} focus:outline-none focus:ring-2 focus:ring-blue-500`}
                 placeholder={language === 'zh' ? '输入药物名称' : 'Enter medication name'}
               />
@@ -772,7 +776,11 @@ const ASRedesign = () => {
               <label className={`block text-sm font-medium ${textClass} mb-2`}>{t[language].medicationType}</label>
               <select
                 value={newMedication.type}
-                onChange={(e) => setNewMedication({...newMedication, type: e.target.value})}
+                onChange={(e) => {
+                  const value = e.target.value;
+                  console.log('药物类型选择:', value);
+                  setNewMedication(prev => ({...prev, type: value}));
+                }}
                 className={`w-full px-3 py-2 border rounded-lg ${isDark ? 'bg-gray-700 border-gray-600' : 'bg-white border-gray-300'} focus:outline-none focus:ring-2 focus:ring-blue-500`}
               >
                 <option value="NSAID">NSAID</option>
@@ -787,7 +795,11 @@ const ASRedesign = () => {
                 <input
                   type="text"
                   value={newMedication.dosage}
-                  onChange={(e) => setNewMedication({...newMedication, dosage: e.target.value})}
+                  onChange={(e) => {
+                    const value = e.target.value;
+                    console.log('剂量输入:', value);
+                    setNewMedication(prev => ({...prev, dosage: value}));
+                  }}
                   className={`w-full px-3 py-2 border rounded-lg ${isDark ? 'bg-gray-700 border-gray-600' : 'bg-white border-gray-300'} focus:outline-none focus:ring-2 focus:ring-blue-500`}
                   placeholder={language === 'zh' ? '如：200mg' : 'e.g., 200mg'}
                 />
@@ -797,7 +809,11 @@ const ASRedesign = () => {
                 <input
                   type="text"
                   value={newMedication.frequency}
-                  onChange={(e) => setNewMedication({...newMedication, frequency: e.target.value})}
+                  onChange={(e) => {
+                    const value = e.target.value;
+                    console.log('频率输入:', value);
+                    setNewMedication(prev => ({...prev, frequency: value}));
+                  }}
                   className={`w-full px-3 py-2 border rounded-lg ${isDark ? 'bg-gray-700 border-gray-600' : 'bg-white border-gray-300'} focus:outline-none focus:ring-2 focus:ring-blue-500`}
                   placeholder={language === 'zh' ? '如：每日2次' : 'e.g., Twice daily'}
                 />
