@@ -1,0 +1,17 @@
+{
+  "short_name": "AS助手",
+  "name": "强直性脊柱炎健康管理助手",
+  "description": "专为AS患者设计的症状追踪和健康管理工具",
+  "icons": [
+    {
+      "src": "favicon.ico",
+      "sizes": "64x64 32x32 24x24 16x16",
+      "type": "image/x-icon"
+    }
+  ],
+  "start_url": ".",
+  "display": "standalone",
+  "theme_color": "#3b82f6",
+  "background_color": "#ffffff",
+  "orientation": "portrait"
+}

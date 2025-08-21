@@ -1,0 +1,13 @@
+{
+  "files": {
+    "main.css": "/phone_AS_APP/static/css/main.0cf8f3ff.css",
+    "main.js": "/phone_AS_APP/static/js/main.c6f8697f.js",
+    "index.html": "/phone_AS_APP/index.html",
+    "main.0cf8f3ff.css.map": "/phone_AS_APP/static/css/main.0cf8f3ff.css.map",
+    "main.c6f8697f.js.map": "/phone_AS_APP/static/js/main.c6f8697f.js.map"
+  },
+  "entrypoints": [
+    "static/css/main.0cf8f3ff.css",
+    "static/js/main.c6f8697f.js"
+  ]
+}
