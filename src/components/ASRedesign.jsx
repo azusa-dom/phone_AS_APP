@@ -286,7 +286,7 @@ const ASRedesign = () => {
       icon: '💊',
       category: { zh: '用药指南', en: 'Medication' },
       completed: false,
-      url: '#'
+      url: 'https://zhuanlan.zhihu.com/p/577156969'
     },
     {
       id: 4,
@@ -295,7 +295,7 @@ const ASRedesign = () => {
       icon: '🥗',
       category: { zh: '营养饮食', en: 'Nutrition' },
       completed: true,
-      url: '#'
+      url: 'https://www.thepaper.cn/newsDetail_forward_26801561'
     }
   ];
 
