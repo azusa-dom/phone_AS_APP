@@ -1,78 +1,25 @@
-import React, { useState, useEffect } from 'react';
-import { Home, Calendar, Pill, TrendingUp, Book, Settings, Plus, ChevronRight, Bell, Download, Share2, AlertCircle, Clock, Target, Activity, Heart, Moon, Sun, User, Shield, Globe, Palette, Volume2, Eye, CheckCircle, XCircle, BarChart3, PieChart, LineChart, Camera, FileText, Stethoscope, Zap, Edit3, Trash2, Save, MessageCircle, Send, Bot } from 'lucide-react';
-import { LineChart as RechartsLineChart, Line, AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart as RechartsPieChart, Cell, BarChart as RechartsBarChart, Bar } from 'recharts';
+import React, { useState } from 'react';
+import { Home, Calendar, Pill, TrendingUp, Book, Plus, ChevronRight, Bell, Download, Share2, AlertCircle, Clock, Target, Activity, Heart, User, Shield, Palette, LineChart, Zap, MessageCircle, Send, Bot } from 'lucide-react';
+import { LineChart as RechartsLineChart, Line, AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart as RechartsBarChart, Bar } from 'recharts';
 
 const ASRedesign = () => {
   const [currentPage, setCurrentPage] = useState('home');
   const [language, setLanguage] = useState('zh');
   const [theme, setTheme] = useState('light');
-  const [themeColor, setThemeColor] = useState('blue');
+  const [themeColor, setThemeColor] = useState('blue'); // blue, purple, green, orange
   const [painLevel, setPainLevel] = useState(3);
   const [stiffnessTime, setStiffnessTime] = useState(30);
   const [fatigue, setFatigue] = useState(3);
   const [isFlare, setIsFlare] = useState(false);
   const [selectedTriggers, setSelectedTriggers] = useState([]);
   const [showAddMed, setShowAddMed] = useState(false);
-  const [newMedication, setNewMedication] = useState({
-    name: '',
-    type: 'NSAID',
-    dosage: '',
-    frequency: ''
-  });
   const [chatMessages, setChatMessages] = useState([]);
   const [chatInput, setChatInput] = useState('');
   const [medications, setMedications] = useState([
-    {
-      id: 1,
-      name: { zh: '阿达木单抗 (修美乐)', en: 'Adalimumab (Humira)' },
-      type: 'TNFi',
-      dosage: '40mg',
-      frequency: { zh: '每2周', en: 'Every 2 weeks' },
-      nextDose: '2025-08-25',
-      adherence: 95,
-      sideEffects: { zh: [], en: [] }
-    },
-    {
-      id: 2,
-      name: { zh: '塞来昔布', en: 'Celecoxib' },
-      type: 'NSAID',
-      dosage: '200mg',
-      frequency: { zh: '每日2次', en: 'Twice daily' },
-      nextDose: '2025-08-22',
-      adherence: 88,
-      sideEffects: { zh: ['胃痛'], en: ['Stomach pain'] }
-    }
+    { id: 1, name: 'Adalimumab', type: 'TNFi', dosage: '40mg', frequency: language === 'zh' ? '每2周' : 'Every 2 weeks', nextDose: '2025-08-23', adherence: 95, sideEffects: [] },
+    { id: 2, name: 'Celecoxib', type: 'NSAID', dosage: '200mg', frequency: language === 'zh' ? '每日2次' : 'Twice daily', nextDose: '2025-08-22', adherence: 88, sideEffects: language === 'zh' ? ['胃痛'] : ['Stomach pain'] }
   ]);
 
-  // 主题色配置
-  const themeColors = {
-    blue: {
-      primary: 'from-blue-500 to-blue-600',
-      secondary: 'from-blue-400 to-purple-500',
-      accent: 'blue-500',
-      light: 'blue-50'
-    },
-    green: {
-      primary: 'from-green-500 to-green-600',
-      secondary: 'from-green-400 to-teal-500',
-      accent: 'green-500',
-      light: 'green-50'
-    },
-    purple: {
-      primary: 'from-purple-500 to-purple-600',
-      secondary: 'from-purple-400 to-pink-500',
-      accent: 'purple-500',
-      light: 'purple-50'
-    },
-    orange: {
-      primary: 'from-orange-500 to-orange-600',
-      secondary: 'from-orange-400 to-red-500',
-      accent: 'orange-500',
-      light: 'orange-50'
-    }
-  };
-
-  // 模拟数据 - 完全国际化
   const weeklyData = [
     { day: language === 'zh' ? '周一' : 'Mon', pain: 4, stiffness: 45, fatigue: 3 },
     { day: language === 'zh' ? '周二' : 'Tue', pain: 3, stiffness: 30, fatigue: 2 },
@@ -84,167 +31,30 @@ const ASRedesign = () => {
   ];
 
   const flareData = [
-    { 
-      trigger: language === 'zh' ? '睡眠不足' : 'Sleep deprivation', 
-      count: 8, 
-      color: '#EF4444', 
-      percentage: 40 
-    },
-    { 
-      trigger: language === 'zh' ? '天气变化' : 'Weather changes', 
-      count: 5, 
-      color: '#F59E0B', 
-      percentage: 25 
-    },
-    { 
-      trigger: language === 'zh' ? '工作压力' : 'Work stress', 
-      count: 4, 
-      color: '#8B5CF6', 
-      percentage: 20 
-    },
-    { 
-      trigger: language === 'zh' ? '过度劳累' : 'Overexertion', 
-      count: 3, 
-      color: '#06B6D4', 
-      percentage: 15 
-    }
+    { trigger: language === 'zh' ? '睡眠不足' : 'Sleep deprivation', count: 8, color: '#EF4444' },
+    { trigger: language === 'zh' ? '天气变化' : 'Weather changes', count: 5, color: '#F59E0B' },
+    { trigger: language === 'zh' ? '工作压力' : 'Work stress', count: 4, color: '#8B5CF6' },
+    { trigger: language === 'zh' ? '过度劳累' : 'Overexertion', count: 3, color: '#06B6D4' }
   ];
 
-  // 完整的翻译对象
   const t = {
     zh: {
-      home: '今日概览',
-      track: '症状记录',
-      meds: '用药管理',
-      reports: '趋势报告',
-      library: '教育资源',
-      settings: '设置',
-      todayOverview: '今日状态',
-      quickRecord: '快速记录',
-      painLevel: '疼痛程度',
-      morningStiffness: '晨僵时长',
-      fatigue: '疲劳程度',
-      flare: '发作状态',
-      triggers: '可能诱因',
-      saveRecord: '保存记录',
-      weekSummary: '本周记录',
-      avgPain: '疼痛均值',
-      checkInDays: '打卡天数',
-      flareCount: '发作次数',
-      microLearning: '健康微课',
-      minutes: '分钟',
-      addMedication: '添加药物',
-      medicationName: '药物名称',
-      dosageFrequency: '剂量/频率',
-      nextDose: '下次用药',
-      adherence: '依从性',
-      sideEffects: '副作用',
-      noSideEffects: '无副作用',
-      takeMed: '已用药',
-      skipMed: '跳过',
-      weeklyTrends: '本周趋势',
-      monthlyReport: '月度报告',
-      exportPDF: '导出PDF',
-      shareReport: '分享报告',
-      painTrend: '疼痛趋势',
-      flareAnalysis: '发作分析',
-      triggerAnalysis: '诱因分析',
-      appearance: '外观设置',
-      privacy: '隐私设置',
-      notifications: '通知设置',
-      language: '语言',
-      darkMode: '深色模式',
-      fontSize: '字体大小',
-      dataExport: '数据导出',
-      dataImport: '数据导入',
-      about: '关于应用',
-      themeColor: '主题颜色',
-      blue: '蓝色',
-      green: '绿色',
-      purple: '紫色',
-      orange: '橙色',
-      cancel: '取消',
-      confirm: '确认',
-      edit: '编辑',
-      delete: '删除',
-      save: '保存',
-      dosage: '剂量',
-      frequency: '频率',
-      medicationType: '药物类型',
-      painLabel: '疼痛',
-      fatigueLabel: '疲劳',
-      stiffnessLabel: '晨僵',
-      aiChat: 'AI助手',
-      aiDisclaimer: '⚠️ AI回答仅供参考，请遵循医生建议',
-      askAI: '向AI提问',
-      chatPlaceholder: '请输入您的问题...'
+      home: '今日概览', track: '症状记录', meds: '用药管理', reports: '趋势报告', library: '教育资源', settings: '设置',
+      todayOverview: '今日状态', quickRecord: '快速记录', painLevel: '疼痛程度', morningStiffness: '晨僵时长', fatigue: '疲劳程度', flare: '发作状态', triggers: '可能诱因', saveRecord: '保存记录',
+      weekSummary: '本周记录', avgPain: '疼痛均值', checkInDays: '打卡天数', flareCount: '发作次数', microLearning: '健康微课', minutes: '分钟',
+      addMedication: '添加药物', medicationName: '药物名称', dosageFrequency: '剂量/频率', nextDose: '下次用药', adherence: '依从性', sideEffects: '副作用', noSideEffects: '无副作用', takeMed: '已用药', skipMed: '跳过',
+      weeklyTrends: '本周趋势', monthlyReport: '月度报告', exportPDF: '导出PDF', shareReport: '分享报告', painTrend: '疼痛趋势', flareAnalysis: '发作分析', triggerAnalysis: '诱因分析',
+      appearance: '外观设置', privacy: '隐私设置', notifications: '通知设置', language: '语言', darkMode: '深色模式', fontSize: '字体大小', dataExport: '数据导出', dataImport: '数据导入', about: '关于应用',
+      themeColor: '主题颜色', aiChat: 'AI助手', aiDisclaimer: '⚠️ AI回答仅供参考，请遵循医生建议', askAI: '向AI提问', chatPlaceholder: '请输入您的问题...'
     },
     en: {
-      home: 'Today',
-      track: 'Tracking',
-      meds: 'Medication',
-      reports: 'Reports',
-      library: 'Education',
-      settings: 'Settings',
-      todayOverview: 'Today\'s Status',
-      quickRecord: 'Quick Record',
-      painLevel: 'Pain Level',
-      morningStiffness: 'Morning Stiffness',
-      fatigue: 'Fatigue Level',
-      flare: 'Flare Status',
-      triggers: 'Possible Triggers',
-      saveRecord: 'Save Record',
-      weekSummary: 'Weekly Summary',
-      avgPain: 'Avg Pain',
-      checkInDays: 'Check-in Days',
-      flareCount: 'Flare Count',
-      microLearning: 'Health Tips',
-      minutes: 'minutes',
-      addMedication: 'Add Medication',
-      medicationName: 'Medication Name',
-      dosageFrequency: 'Dosage/Frequency',
-      nextDose: 'Next Dose',
-      adherence: 'Adherence',
-      sideEffects: 'Side Effects',
-      noSideEffects: 'No Side Effects',
-      takeMed: 'Take Med',
-      skipMed: 'Skip',
-      weeklyTrends: 'Weekly Trends',
-      monthlyReport: 'Monthly Report',
-      exportPDF: 'Export PDF',
-      shareReport: 'Share Report',
-      painTrend: 'Pain Trend',
-      flareAnalysis: 'Flare Analysis',
-      triggerAnalysis: 'Trigger Analysis',
-      appearance: 'Appearance',
-      privacy: 'Privacy',
-      notifications: 'Notifications',
-      language: 'Language',
-      darkMode: 'Dark Mode',
-      fontSize: 'Font Size',
-      dataExport: 'Data Export',
-      dataImport: 'Data Import',
-      about: 'About',
-      themeColor: 'Theme Color',
-      blue: 'Blue',
-      green: 'Green',
-      purple: 'Purple',
-      orange: 'Orange',
-      cancel: 'Cancel',
-      confirm: 'Confirm',
-      edit: 'Edit',
-      delete: 'Delete',
-      save: 'Save',
-      dosage: 'Dosage',
-      frequency: 'Frequency',
-      medicationType: 'Medication Type',
-      painLabel: 'Pain',
-      fatigueLabel: 'Fatigue',
-      stiffnessLabel: 'Stiffness',
-      aiChat: 'AI Assistant',
-      aiDisclaimer: '⚠️ AI responses are for reference only. Please follow medical advice.',
-      askAI: 'Ask AI',
-      chatPlaceholder: 'Enter your question...'
+      home: 'Today', track: 'Tracking', meds: 'Medication', reports: 'Reports', library: 'Education', settings: 'Settings',
+      todayOverview: "Today's Status", quickRecord: 'Quick Record', painLevel: 'Pain Level', morningStiffness: 'Morning Stiffness', fatigue: 'Fatigue Level', flare: 'Flare Status', triggers: 'Possible Triggers', saveRecord: 'Save Record',
+      weekSummary: 'Weekly Summary', avgPain: 'Avg Pain', checkInDays: 'Check-in Days', flareCount: 'Flare Count', microLearning: 'Health Tips', minutes: 'minutes',
+      addMedication: 'Add Medication', medicationName: 'Medication Name', dosageFrequency: 'Dosage/Frequency', nextDose: 'Next Dose', adherence: 'Adherence', sideEffects: 'Side Effects', noSideEffects: 'No Side Effects', takeMed: 'Take Med', skipMed: 'Skip',
+      weeklyTrends: 'Weekly Trends', monthlyReport: 'Monthly Report', exportPDF: 'Export PDF', shareReport: 'Share Report', painTrend: 'Pain Trend', flareAnalysis: 'Flare Analysis', triggerAnalysis: 'Trigger Analysis',
+      appearance: 'Appearance', privacy: 'Privacy', notifications: 'Notifications', language: 'Language', darkMode: 'Dark Mode', fontSize: 'Font Size', dataExport: 'Data Export', dataImport: 'Data Import', about: 'About',
+      themeColor: 'Theme Color', aiChat: 'AI Assistant', aiDisclaimer: '⚠️ AI responses are for reference only. Please follow medical advice.', askAI: 'Ask AI', chatPlaceholder: 'Enter your question...'
     }
   };
 
@@ -252,47 +62,21 @@ const ASRedesign = () => {
   const fatigueEmojis = ['😊', '🙂', '😐', '😟', '😰', '😵‍💫', '😵', '😭', '🤯', '💀', '☠️'];
 
   const triggers = [
-    { id: 'sleep', label: { zh: '睡眠', en: 'Sleep' }, icon: '🛏️' },
-    { id: 'posture', label: { zh: '姿势', en: 'Posture' }, icon: '🪑' },
-    { id: 'overuse', label: { zh: '过劳', en: 'Overuse' }, icon: '💪' },
-    { id: 'infection', label: { zh: '感染', en: 'Infection' }, icon: '🦠' },
-    { id: 'emotion', label: { zh: '情绪', en: 'Emotion' }, icon: '😰' },
-    { id: 'weather', label: { zh: '天气', en: 'Weather' }, icon: '🌧️' }
+    { id: 'sleep', label: language === 'zh' ? '睡眠' : 'Sleep', icon: '🛏️' },
+    { id: 'posture', label: language === 'zh' ? '姿势' : 'Posture', icon: '🪑' },
+    { id: 'overuse', label: language === 'zh' ? '过劳' : 'Overuse', icon: '💪' },
+    { id: 'infection', label: language === 'zh' ? '感染' : 'Infection', icon: '🦠' },
+    { id: 'emotion', label: language === 'zh' ? '情绪' : 'Emotion', icon: '😰' },
+    { id: 'weather', label: language === 'zh' ? '天气' : 'Weather', icon: '🌧️' }
   ];
 
   const educationContent = [
-    {
-      id: 1,
-      title: { zh: 'AS 基础科普', en: 'AS Basics' },
-      duration: { zh: '2 分钟', en: '2 min' },
-      icon: '📖',
-      category: { zh: '基础知识', en: 'Basics' },
-      completed: true
-    },
-    {
-      id: 2,
-      title: { zh: '颈部拉伸指南', en: 'Neck Stretching Guide' },
-      duration: { zh: '5 分钟', en: '5 min' },
-      icon: '🏃‍♂️',
-      category: { zh: '运动康复', en: 'Exercise' },
-      completed: false
-    },
-    {
-      id: 3,
-      title: { zh: '生物制剂科普', en: 'Biologics Guide' },
-      duration: { zh: '3 分钟', en: '3 min' },
-      icon: '💊',
-      category: { zh: '用药指南', en: 'Medication' },
-      completed: false
-    },
-    {
-      id: 4,
-      title: { zh: '抗炎饮食建议', en: 'Anti-inflammatory Diet' },
-      duration: { zh: '4 分钟', en: '4 min' },
-      icon: '🥗',
-      category: { zh: '营养饮食', en: 'Nutrition' },
-      completed: true
-    }
+    { id: 1, title: language === 'zh' ? 'AS 基础科普' : 'AS Basics', duration: language === 'zh' ? '2 分钟' : '2 min', icon: '📖', category: language === 'zh' ? '基础知识' : 'Basics', completed: true },
+    { id: 2, title: language === 'zh' ? '颈部拉伸指南' : 'Neck Stretching Guide', duration: language === 'zh' ? '5 分钟' : '5 min', icon: '🏃‍♂️', category: language === 'zh' ? '运动康复' : 'Exercise', completed: false },
+    { id: 3, title: language === 'zh' ? '生物制剂科普' : 'Biologics Guide', duration: language === 'zh' ? '3 分钟' : '3 min', icon: '💊', category: language === 'zh' ? '用药指南' : 'Medication', completed: false },
+    { id: 4, title: language === 'zh' ? '抗炎饮食建议' : 'Anti-inflammatory Diet', duration: language === 'zh' ? '4 分钟' : '4 min', icon: '🥗', category: language === 'zh' ? '营养饮食' : 'Nutrition', completed: true },
+    { id: 5, title: language === 'zh' ? '睡眠质量改善' : 'Sleep Quality Tips', duration: language === 'zh' ? '3 分钟' : '3 min', icon: '😴', category: language === 'zh' ? '生活方式' : 'Lifestyle', completed: false },
+    { id: 6, title: language === 'zh' ? '就医准备清单' : 'Doctor Visit Checklist', duration: language === 'zh' ? '2 分钟' : '2 min', icon: '👨‍⚕️', category: language === 'zh' ? '就医指导' : 'Healthcare', completed: false }
   ];
 
   const isDark = theme === 'dark';
@@ -300,58 +84,18 @@ const ASRedesign = () => {
   const cardClass = isDark ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-100';
   const textClass = isDark ? 'text-white' : 'text-gray-900';
   const subtextClass = isDark ? 'text-gray-300' : 'text-gray-500';
+
+  // 主题色配置
+  const themeColors = {
+    blue: { primary: 'bg-blue-500', gradient: 'from-blue-500 to-blue-600', text: 'text-blue-500', border: 'border-blue-500' },
+    purple: { primary: 'bg-purple-500', gradient: 'from-purple-500 to-purple-600', text: 'text-purple-500', border: 'border-purple-500' },
+    green: { primary: 'bg-green-500', gradient: 'from-green-500 to-green-600', text: 'text-green-500', border: 'border-green-500' },
+    orange: { primary: 'bg-orange-500', gradient: 'from-orange-500 to-orange-600', text: 'text-orange-500', border: 'border-orange-500' }
+  };
   const currentTheme = themeColors[themeColor];
 
-  // 添加触发器选择逻辑
   const toggleTrigger = (triggerId) => {
-    setSelectedTriggers(prev => 
-      prev.includes(triggerId) 
-        ? prev.filter(id => id !== triggerId)
-        : [...prev, triggerId]
-    );
-  };
-
-  // 添加药物功能
-  const handleAddMedication = () => {
-    if (newMedication.name.trim()) {
-      const newMed = {
-        id: Date.now(),
-        name: { zh: newMedication.name, en: newMedication.name },
-        type: newMedication.type,
-        dosage: newMedication.dosage,
-        frequency: { zh: newMedication.frequency, en: newMedication.frequency },
-        nextDose: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-        adherence: 100,
-        sideEffects: { zh: [], en: [] }
-      };
-      setMedications([...medications, newMed]);
-      setNewMedication({ name: '', type: 'NSAID', dosage: '', frequency: '' });
-      setShowAddMed(false);
-    }
-  };
-
-  // 删除药物功能
-  const handleDeleteMedication = (id) => {
-    setMedications(medications.filter(med => med.id !== id));
-  };
-
-  // 自定义Tooltip组件，确保完全国际化
-  const CustomTooltip = ({ active, payload, label }) => {
-    if (active && payload && payload.length) {
-      return (
-        <div className={`${cardClass} p-3 rounded-lg shadow-lg border`}>
-          <p className={`${textClass} font-medium mb-2`}>{label}</p>
-          {payload.map((entry, index) => (
-            <p key={index} style={{ color: entry.color }} className="text-sm">
-              {entry.dataKey === 'pain' && `${t[language].painLabel}: ${entry.value}`}
-              {entry.dataKey === 'fatigue' && `${t[language].fatigueLabel}: ${entry.value}`}
-              {entry.dataKey === 'stiffness' && `${t[language].stiffnessLabel}: ${entry.value} ${t[language].minutes}`}
-            </p>
-          ))}
-        </div>
-      );
-    }
-    return null;
+    setSelectedTriggers(prev => prev.includes(triggerId) ? prev.filter(id => id !== triggerId) : [...prev, triggerId]);
   };
 
   // 模拟AI回复
@@ -410,7 +154,7 @@ const ASRedesign = () => {
 
   const NavBar = () => (
     <div className={`fixed bottom-0 left-0 right-0 ${isDark ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'} border-t px-2 py-2 backdrop-blur-lg bg-opacity-95`}>
-      <div className="flex justify-around">
+      <div className="grid grid-cols-6 gap-1">
         {[
           { id: 'home', icon: Home, label: t[language].home },
           { id: 'track', icon: Calendar, label: t[language].track },
@@ -419,15 +163,7 @@ const ASRedesign = () => {
           { id: 'library', icon: Book, label: t[language].library },
           { id: 'ai', icon: Bot, label: t[language].aiChat }
         ].map(({ id, icon: Icon, label }) => (
-          <button
-            key={id}
-            onClick={() => setCurrentPage(id)}
-            className={`flex flex-col items-center py-2 px-3 rounded-xl transition-all duration-200 ${
-              currentPage === id 
-                ? `bg-gradient-to-b ${currentTheme.primary} text-white shadow-lg transform scale-105` 
-                : `${subtextClass} hover:${textClass} hover:bg-gray-100 ${isDark ? 'hover:bg-gray-700' : ''}`
-            }`}
-          >
+          <button key={id} onClick={() => setCurrentPage(id)} className={`flex flex-col items-center py-2 px-3 rounded-xl transition-all duration-200 ${currentPage === id ? `bg-gradient-to-b ${currentTheme.gradient} text-white shadow-lg transform scale-105` : `${subtextClass} hover:${textClass} ${isDark ? 'hover:bg-gray-700' : 'hover:bg-gray-100'}`}`}>
             <Icon size={20} />
             <span className="text-xs mt-1 font-medium">{label}</span>
           </button>
@@ -441,34 +177,25 @@ const ASRedesign = () => {
       <div className="flex justify-between items-center">
         <div>
           <h1 className={`text-3xl font-bold ${textClass}`}>{t[language].home}</h1>
-          <p className={`${subtextClass} mt-1`}>
-            {language === 'zh' ? '今天感觉如何？' : 'How are you feeling today?'}
-          </p>
+          <p className={`${subtextClass} mt-1`}>{language === 'zh' ? '今天感觉如何？' : 'How are you feeling today?'}</p>
         </div>
         <div className="flex items-center space-x-3">
-          <button
-            onClick={() => setLanguage(language === 'zh' ? 'en' : 'zh')}
-            className={`px-4 py-2 ${cardClass} rounded-xl text-sm font-medium shadow-sm border transition-all hover:shadow-md`}
-          >
+          <button onClick={() => setLanguage(language === 'zh' ? 'en' : 'zh')} className={`px-4 py-2 ${cardClass} rounded-xl text-sm font-medium shadow-sm border transition-all hover:shadow-md`}>
             {language === 'zh' ? 'EN' : '中文'}
           </button>
-          <button onClick={() => setCurrentPage('settings')}>
-            <Settings className={`${subtextClass} hover:${textClass} transition-colors`} size={22} />
-          </button>
+          <div className="relative">
+            <Bell className={`${subtextClass} hover:${textClass} transition-colors cursor-pointer`} size={22} />
+            <div className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full"></div>
+          </div>
         </div>
       </div>
 
-      <div className={`bg-gradient-to-br ${currentTheme.secondary} rounded-2xl p-6 text-white shadow-xl relative overflow-hidden`}>
+      <div className="bg-gradient-to-br from-blue-500 via-blue-600 to-purple-600 rounded-2xl p-6 text-white shadow-xl relative overflow-hidden">
         <div className="absolute top-0 right-0 w-32 h-32 bg-white opacity-10 rounded-full -translate-y-8 translate-x-8"></div>
         <div className="relative z-10">
           <h2 className="text-xl font-bold mb-2">{t[language].quickRecord}</h2>
-          <p className="text-blue-100 mb-4 text-sm">
-            {language === 'zh' ? '30秒完成今日记录' : 'Complete today\'s log in 30 seconds'}
-          </p>
-          <button
-            onClick={() => setCurrentPage('track')}
-            className="bg-white text-blue-600 px-6 py-3 rounded-xl font-semibold hover:bg-blue-50 transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-105"
-          >
+          <p className="text-blue-100 mb-4 text-sm">{language === 'zh' ? '30秒完成今日记录' : "Complete today's log in 30 seconds"}</p>
+          <button onClick={() => setCurrentPage('track')} className="bg-white text-blue-600 px-6 py-3 rounded-xl font-semibold hover:bg-blue-50 transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-105">
             {language === 'zh' ? '开始记录 →' : 'Start Recording →'}
           </button>
         </div>
@@ -478,20 +205,15 @@ const ASRedesign = () => {
         <div className={`${cardClass} rounded-2xl p-4 shadow-sm border`}>
           <div className="flex items-center justify-between mb-2">
             <Activity className="text-blue-500" size={20} />
-            <span className="text-xs font-medium text-blue-500 bg-blue-50 px-2 py-1 rounded-full">
-              {language === 'zh' ? '今日' : 'Today'}
-            </span>
+            <span className="text-xs font-medium text-blue-500 bg-blue-50 px-2 py-1 rounded-full">{language === 'zh' ? '今日' : 'Today'}</span>
           </div>
           <div className={`text-2xl font-bold ${textClass}`}>3.2</div>
           <div className={`text-sm ${subtextClass}`}>{t[language].avgPain}</div>
         </div>
-        
         <div className={`${cardClass} rounded-2xl p-4 shadow-sm border`}>
           <div className="flex items-center justify-between mb-2">
             <Target className="text-green-500" size={20} />
-            <span className="text-xs font-medium text-green-500 bg-green-50 px-2 py-1 rounded-full">
-              {language === 'zh' ? '本周' : 'This Week'}
-            </span>
+            <span className="text-xs font-medium text-green-500 bg-green-50 px-2 py-1 rounded-full">{language === 'zh' ? '本周' : 'This Week'}</span>
           </div>
           <div className={`text-2xl font-bold ${textClass}`}>5/7</div>
           <div className={`text-sm ${subtextClass}`}>{t[language].checkInDays}</div>
@@ -503,29 +225,19 @@ const ASRedesign = () => {
           <h3 className={`text-lg font-bold ${textClass}`}>{t[language].weekSummary}</h3>
           <LineChart className={`${subtextClass}`} size={20} />
         </div>
-        
         <div className="h-32 mb-4">
           <ResponsiveContainer width="100%" height="100%">
             <AreaChart data={weeklyData}>
               <defs>
                 <linearGradient id="painGradient" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="#3B82F6" stopOpacity={0.3}/>
-                  <stop offset="95%" stopColor="#3B82F6" stopOpacity={0}/>
+                  <stop offset="5%" stopColor="#3B82F6" stopOpacity={0.3} />
+                  <stop offset="95%" stopColor="#3B82F6" stopOpacity={0} />
                 </linearGradient>
               </defs>
-              <Area 
-                type="monotone" 
-                dataKey="pain" 
-                stroke="#3B82F6" 
-                fillOpacity={1} 
-                fill="url(#painGradient)"
-                strokeWidth={3}
-              />
-              <Tooltip content={<CustomTooltip />} />
+              <Area type="monotone" dataKey="pain" stroke="#3B82F6" fillOpacity={1} fill="url(#painGradient)" strokeWidth={3} />
             </AreaChart>
           </ResponsiveContainer>
         </div>
-        
         <div className="grid grid-cols-3 gap-4">
           <div className="text-center">
             <div className="text-xl font-bold text-blue-600">3.2</div>
@@ -547,47 +259,33 @@ const ASRedesign = () => {
           <h3 className={`text-lg font-bold ${textClass}`}>{t[language].microLearning}</h3>
           <Book className={`${subtextClass}`} size={20} />
         </div>
-        
         <div className="space-y-3">
           {educationContent.slice(0, 2).map((item) => (
-            <div key={item.id} className={`flex items-center p-4 ${isDark ? 'bg-gray-700' : 'bg-gray-50'} rounded-xl hover:${isDark ? 'bg-gray-600' : 'bg-gray-100'} transition-all duration-200 cursor-pointer group`}>
-              <div className={`flex items-center justify-center w-12 h-12 bg-gradient-to-br ${currentTheme.secondary} rounded-xl mr-4 text-white text-xl`}>
-                {item.icon}
-              </div>
+            <div key={item.id} className={`flex items-center p-4 ${isDark ? 'bg-gray-700' : 'bg-gray-50'} rounded-xl transition-all duration-200 cursor-pointer group`}>
+              <div className="flex items-center justify-center w-12 h-12 bg-gradient-to-br from-blue-400 to-purple-500 rounded-xl mr-4 text-white text-xl">{item.icon}</div>
               <div className="flex-1">
-                <div className={`font-semibold ${textClass} group-hover:text-blue-600 transition-colors`}>
-                  {item.title[language]}
-                </div>
+                <div className={`font-semibold ${textClass}`}>{item.title}</div>
                 <div className={`text-sm ${subtextClass} flex items-center mt-1`}>
                   <Clock size={12} className="mr-1" />
-                  {item.duration[language]}
-                  {item.completed && (
-                    <CheckCircle size={12} className="ml-2 text-green-500" />
-                  )}
+                  {item.duration}
                 </div>
               </div>
-              <ChevronRight className={`${subtextClass} group-hover:text-blue-600 transition-colors`} size={20} />
+              <ChevronRight className={`${subtextClass}`} size={20} />
             </div>
           ))}
         </div>
-        
-        <button 
-          onClick={() => setCurrentPage('library')}
-          className={`w-full mt-4 py-3 ${isDark ? 'bg-gray-700 hover:bg-gray-600' : 'bg-gray-100 hover:bg-gray-200'} rounded-xl font-medium ${textClass} transition-all duration-200`}
-        >
+        <button onClick={() => setCurrentPage('library')} className={`w-full mt-4 py-3 ${isDark ? 'bg-gray-700 hover:bg-gray-600' : 'bg-gray-100 hover:bg-gray-200'} rounded-xl font-medium ${textClass} transition-all duration-200`}>
           {language === 'zh' ? '查看更多课程' : 'View More Courses'}
         </button>
       </div>
     </div>
   );
 
-
-
   const TrackPage = () => (
     <div className={`p-4 pb-20 space-y-6 ${bgClass} min-h-screen`}>
       <div className="flex items-center justify-between">
         <h1 className={`text-2xl font-bold ${textClass}`}>{t[language].track}</h1>
-        <div className="flex items-center space-x-2">
+        <div className="flex items中心 space-x-2">
           <Calendar className={`${subtextClass}`} size={20} />
           <span className={`text-sm ${subtextClass}`}>{new Date().toLocaleDateString(language === 'zh' ? 'zh-CN' : 'en-US')}</span>
         </div>
@@ -648,7 +346,7 @@ const ASRedesign = () => {
               {triggers.map((trigger) => (
                 <button key={trigger.id} onClick={() => toggleTrigger(trigger.id)} className={`flex flex-col items-center p-3 rounded-xl transition-all duration-200 ${selectedTriggers.includes(trigger.id) ? 'bg-blue-500 text-white shadow-lg transform scale-105' : `${isDark ? 'bg-gray-700' : 'bg-white'} hover:bg-blue-50 hover:shadow-md`}`}>
                   <span className="text-2xl mb-1">{trigger.icon}</span>
-                  <span className="text-xs text-center font-medium">{trigger.label[language]}</span>
+                  <span className="text-xs text-center font-medium">{trigger.label}</span>
                 </button>
               ))}
             </div>
@@ -663,7 +361,7 @@ const ASRedesign = () => {
     <div className={`p-4 pb-20 space-y-6 ${bgClass} min-h-screen`}>
       <div className="flex items-center justify-between">
         <h1 className={`text-2xl font-bold ${textClass}`}>{t[language].meds}</h1>
-        <button onClick={() => setShowAddMed(true)} className={`bg-gradient-to-r ${currentTheme.primary} text-white p-3 rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 transform hover:scale-105`}><Plus size={20} /></button>
+        <button onClick={() => setShowAddMed(true)} className={`bg-gradient-to-r ${currentTheme.gradient} text-white p-3 rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 transform hover:scale-105`}><Plus size={20} /></button>
       </div>
       <div className="space-y-4">
         {medications.map((med) => (
@@ -672,10 +370,10 @@ const ASRedesign = () => {
               <div className="flex-1">
                 <div className="flex items-center mb-2">
                   <div className="w-3 h-3 bg-blue-500 rounded-full mr-2"></div>
-                  <h3 className={`text-lg font-bold ${textClass}`}>{med.name[language]}</h3>
+                  <h3 className={`text-lg font-bold ${textClass}`}>{med.name}</h3>
                   <span className={`ml-2 px-2 py-1 text-xs font-medium rounded-full ${med.type === 'TNFi' ? 'bg-purple-100 text-purple-700' : 'bg-blue-100 text-blue-700'}`}>{med.type}</span>
                 </div>
-                <p className={`${subtextClass} text-sm`}>{med.dosage} • {med.frequency[language]}</p>
+                <p className={`${subtextClass} text-sm`}>{med.dosage} • {med.frequency}</p>
               </div>
               <div className="text-right">
                 <div className={`text-sm ${subtextClass}`}>{t[language].nextDose}</div>
@@ -693,9 +391,9 @@ const ASRedesign = () => {
             </div>
             <div className="mb-4">
               <span className={`text-sm font-medium ${textClass} block mb-2`}>{t[language].sideEffects}</span>
-              {med.sideEffects[language].length > 0 ? (
+              {med.sideEffects.length > 0 ? (
                 <div className="flex flex-wrap gap-2">
-                  {med.sideEffects[language].map((effect, index) => (
+                  {med.sideEffects.map((effect, index) => (
                     <span key={index} className="px-2 py-1 bg-red-100 text-red-700 text-xs rounded-full">{effect}</span>
                   ))}
                 </div>
@@ -704,7 +402,7 @@ const ASRedesign = () => {
               )}
             </div>
             <div className="flex gap-3">
-              <button className="flex-1 bg-green-500 text-white py-2 rounded-xl font-medium hover:bg-green-600 transition-colors">{t[language].takeMed}</button>
+              <button className="flex-1 bg-green-500 text白 py-2 rounded-xl font-medium hover:bg-green-600 transition-colors">{t[language].takeMed}</button>
               <button className={`flex-1 ${isDark ? 'bg-gray-700 text-gray-300' : 'bg-gray-100 text-gray-700'} py-2 rounded-xl font-medium hover:bg-gray-200 transition-colors`}>{t[language].skipMed}</button>
             </div>
           </div>
@@ -717,104 +415,55 @@ const ASRedesign = () => {
     </div>
   );
 
-
-
-
-
-
-
   const ReportsPage = () => (
     <div className={`p-4 pb-20 space-y-6 ${bgClass} min-h-screen`}>
       <div className="flex items-center justify-between">
         <h1 className={`text-2xl font-bold ${textClass}`}>{t[language].reports}</h1>
         <div className="flex gap-2">
-          <button className={`p-2 ${cardClass} rounded-xl shadow-sm border hover:shadow-md transition-all`}>
-            <Download size={20} className={`${subtextClass}`} />
-          </button>
-          <button className={`p-2 ${cardClass} rounded-xl shadow-sm border hover:shadow-md transition-all`}>
-            <Share2 size={20} className={`${subtextClass}`} />
-          </button>
+          <button className={`p-2 ${cardClass} rounded-xl shadow-sm border hover:shadow-md transition-all`}><Download size={20} className={`${subtextClass}`} /></button>
+          <button className={`p-2 ${cardClass} rounded-xl shadow-sm border hover:shadow-md transition-all`}><Share2 size={20} className={`${subtextClass}`} /></button>
         </div>
       </div>
-
-      {/* Weekly Trends */}
       <div className={`${cardClass} rounded-2xl p-6 shadow-sm border`}>
-        <h3 className={`text-lg font-bold ${textClass} mb-4 flex items-center`}>
-          <TrendingUp className="mr-2 text-blue-500" size={20} />
-          {t[language].weeklyTrends}
-        </h3>
+        <h3 className={`text-lg font-bold ${textClass} mb-4 flex items-center`}><TrendingUp className="mr-2 text-blue-500" size={20} />{t[language].weeklyTrends}</h3>
         <div className="h-64">
           <ResponsiveContainer width="100%" height="100%">
             <RechartsLineChart data={weeklyData}>
               <CartesianGrid strokeDasharray="3 3" stroke={isDark ? '#374151' : '#E5E7EB'} />
               <XAxis dataKey="day" stroke={isDark ? '#9CA3AF' : '#6B7280'} />
               <YAxis stroke={isDark ? '#9CA3AF' : '#6B7280'} />
-              <Tooltip content={<CustomTooltip />} />
+              <Tooltip contentStyle={{ backgroundColor: isDark ? '#1F2937' : '#FFFFFF', border: `1px solid ${isDark ? '#374151' : '#E5E7EB'}`, borderRadius: '8px' }} />
               <Line type="monotone" dataKey="pain" stroke="#EF4444" strokeWidth={3} dot={{ fill: '#EF4444', strokeWidth: 2, r: 4 }} />
               <Line type="monotone" dataKey="fatigue" stroke="#F59E0B" strokeWidth={3} dot={{ fill: '#F59E0B', strokeWidth: 2, r: 4 }} />
             </RechartsLineChart>
           </ResponsiveContainer>
         </div>
       </div>
-
-      {/* Flare Analysis */}
       <div className={`${cardClass} rounded-2xl p-6 shadow-sm border`}>
-        <h3 className={`text-lg font-bold ${textClass} mb-4 flex items-center`}>
-          <AlertCircle className="mr-2 text-orange-500" size={20} />
-          {t[language].flareAnalysis}
-        </h3>
+        <h3 className={`text-lg font-bold ${textClass} mb-4 flex items-center`}><AlertCircle className="mr-2 text-orange-500" size={20} />{t[language].flareAnalysis}</h3>
         <div className="h-48">
           <ResponsiveContainer width="100%" height="100%">
             <RechartsBarChart data={flareData}>
               <CartesianGrid strokeDasharray="3 3" stroke={isDark ? '#374151' : '#E5E7EB'} />
               <XAxis dataKey="trigger" stroke={isDark ? '#9CA3AF' : '#6B7280'} />
               <YAxis stroke={isDark ? '#9CA3AF' : '#6B7280'} />
-              <Tooltip content={<CustomTooltip />} />
+              <Tooltip contentStyle={{ backgroundColor: isDark ? '#1F2937' : '#FFFFFF', border: `1px solid ${isDark ? '#374151' : '#E5E7EB'}`, borderRadius: '8px' }} />
               <Bar dataKey="count" fill="#8884d8" radius={[4, 4, 0, 0]} />
             </RechartsBarChart>
           </ResponsiveContainer>
         </div>
       </div>
-
-      {/* AI Insights */}
       <div className={`${cardClass} rounded-2xl p-6 shadow-sm border bg-gradient-to-r ${isDark ? 'from-gray-800 to-gray-700' : 'from-blue-50 to-purple-50'}`}>
-        <h3 className={`text-lg font-bold ${textClass} mb-4 flex items-center`}>
-          <Activity className="mr-2 text-purple-500" size={20} />
-          AI {language === 'zh' ? '洞察' : 'Insights'}
-        </h3>
+        <h3 className={`text-lg font-bold ${textClass} mb-4 flex items-center`}><Activity className="mr-2 text-purple-500" size={20} />AI {language === 'zh' ? '洞察' : 'Insights'}</h3>
         <div className="space-y-3">
-          <div className={`p-3 ${isDark ? 'bg-gray-700' : 'bg-white'} rounded-xl border`}>
-            <p className={`text-sm ${textClass}`}>
-              {language === 'zh' 
-                ? '📈 本周疼痛水平较上周下降了 15%，继续保持！' 
-                : '📈 Pain levels decreased by 15% this week compared to last week. Keep it up!'}
-            </p>
-          </div>
-          <div className={`p-3 ${isDark ? 'bg-gray-700' : 'bg-white'} rounded-xl border`}>
-            <p className={`text-sm ${textClass}`}>
-              {language === 'zh' 
-                ? '⚠️ 睡眠不足与发作高度相关，建议保持 7-8 小时睡眠' 
-                : '⚠️ Sleep deprivation is highly correlated with flares. Aim for 7-8 hours of sleep.'}
-            </p>
-          </div>
-          <div className={`p-3 ${isDark ? 'bg-gray-700' : 'bg-white'} rounded-xl border`}>
-            <p className={`text-sm ${textClass}`}>
-              {language === 'zh' 
-                ? '💊 用药依从性很好，当前治疗方案效果显著' 
-                : '💊 Excellent medication adherence. Current treatment plan shows significant improvement.'}
-            </p>
-          </div>
+          <div className={`p-3 ${isDark ? 'bg-gray-700' : 'bg-white'} rounded-xl border`}><p className={`text-sm ${textClass}`}>{language === 'zh' ? '📈 本周疼痛水平较上周下降了 15%，继续保持！' : '📈 Pain levels decreased by 15% this week compared to last week. Keep it up!'}</p></div>
+          <div className={`p-3 ${isDark ? 'bg-gray-700' : 'bg白'} rounded-xl border`}><p className={`text-sm ${textClass}`}>{language === 'zh' ? '⚠️ 睡眠不足与发作高度相关，建议保持 7-8 小时睡眠' : '⚠️ Sleep deprivation is highly correlated with flares. Aim for 7-8 hours of sleep.'}</p></div>
+          <div className={`p-3 ${isDark ? 'bg-gray-700' : 'bg白'} rounded-xl border`}><p className={`text-sm ${textClass}`}>{language === 'zh' ? '💊 用药依从性很好，当前治疗方案效果显著' : '💊 Excellent medication adherence. Current treatment plan shows significant improvement.'}</p></div>
         </div>
       </div>
-
-      {/* Export Options */}
       <div className="grid grid-cols-2 gap-4">
-        <button className={`bg-gradient-to-r ${currentTheme.primary} text-white py-4 rounded-2xl font-bold hover:shadow-xl transition-all duration-200 transform hover:scale-105`}>
-          {t[language].exportPDF}
-        </button>
-        <button className="bg-gradient-to-r from-purple-500 to-purple-600 text-white py-4 rounded-2xl font-bold hover:from-purple-600 hover:to-purple-700 transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-105">
-          {t[language].shareReport}
-        </button>
+        <button className="bg-gradient-to-r from-green-500 to-green-600 text白 py-4 rounded-2xl font-bold hover:from-green-600 hover:to-green-700 transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-105">{t[language].exportPDF}</button>
+        <button className="bg-gradient-to-r from-purple-500 to-purple-600 text白 py-4 rounded-2xl font-bold hover:from-purple-600 hover:to-purple-700 transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-105">{t[language].shareReport}</button>
       </div>
     </div>
   );
@@ -828,101 +477,46 @@ const ASRedesign = () => {
       { id: 'medication', label: language === 'zh' ? '用药指南' : 'Medication' },
       { id: 'nutrition', label: language === 'zh' ? '营养饮食' : 'Nutrition' }
     ];
-
-    const filteredContent = selectedCategory === 'all' 
-      ? educationContent 
-      : educationContent.filter(item => {
-          const categoryMatch = item.category[language].toLowerCase();
-          return categoryMatch.includes(selectedCategory) || 
-                 (selectedCategory === 'basics' && categoryMatch.includes('基础')) ||
-                 (selectedCategory === 'exercise' && categoryMatch.includes('运动')) ||
-                 (selectedCategory === 'medication' && categoryMatch.includes('用药')) ||
-                 (selectedCategory === 'nutrition' && categoryMatch.includes('营养'));
-        });
-
+    const filteredContent = selectedCategory === 'all' ? educationContent : educationContent.filter(item => item.category.toLowerCase().includes(selectedCategory));
     return (
       <div className={`p-4 pb-20 ${bgClass} min-h-screen`}>
         <h1 className={`text-2xl font-bold ${textClass} mb-6`}>{t[language].library}</h1>
-        
-        {/* Category Filter */}
         <div className="flex space-x-2 mb-6 overflow-x-auto">
           {categories.map((category) => (
-            <button
-              key={category.id}
-              onClick={() => setSelectedCategory(category.id)}
-              className={`px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-all duration-200 ${
-                selectedCategory === category.id
-                  ? `bg-gradient-to-r ${currentTheme.primary} text-white shadow-lg`
-                  : `${isDark ? 'bg-gray-700 text-gray-300 hover:bg-gray-600' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}`
-              }`}
-            >
+            <button key={category.id} onClick={() => setSelectedCategory(category.id)} className={`px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-all duration-200 ${selectedCategory === category.id ? 'bg-gradient-to-r from-blue-500 to-purple-600 text-white shadow-lg' : `${isDark ? 'bg-gray-700 text-gray-300 hover:bg-gray-600' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}`}`}>
               {category.label}
             </button>
           ))}
         </div>
-
-        {/* Progress Overview */}
         <div className={`${cardClass} rounded-2xl p-6 shadow-sm border mb-6`}>
           <div className="flex items-center justify-between mb-4">
-            <h3 className={`text-lg font-bold ${textClass}`}>
-              {language === 'zh' ? '学习进度' : 'Learning Progress'}
-            </h3>
-            <span className={`text-sm ${subtextClass}`}>
-              {educationContent.filter(item => item.completed).length}/{educationContent.length}
-            </span>
+            <h3 className={`text-lg font-bold ${textClass}`}>{language === 'zh' ? '学习进度' : 'Learning Progress'}</h3>
+            <span className={`text-sm ${subtextClass}`}>{educationContent.filter(item => item.completed).length}/{educationContent.length}</span>
           </div>
           <div className="w-full bg-gray-200 rounded-full h-3">
-            <div 
-              className={`h-3 bg-gradient-to-r ${currentTheme.primary} rounded-full transition-all duration-500`}
-              style={{ 
-                width: `${(educationContent.filter(item => item.completed).length / educationContent.length) * 100}%` 
-              }}
-            ></div>
+            <div className="h-3 bg-gradient-to-r from-green-400 to-green-600 rounded-full transition-all duration-500" style={{ width: `${(educationContent.filter(item => item.completed).length / educationContent.length) * 100}%` }}></div>
           </div>
         </div>
-        
-        {/* Content List */}
         <div className="space-y-4">
           {filteredContent.map((item) => (
-            <div key={item.id} className={`${cardClass} rounded-2xl p-4 shadow-sm border hover:shadow-lg transition-all duration-200 cursor-pointer group`}>
+            <div key={item.id} className={`${cardClass} rounded-2xl p-4 shadow-sm border transition-all duration-200 cursor-pointer group`}>
               <div className="flex items-center">
-                <div className={`flex items-center justify-center w-14 h-14 bg-gradient-to-br ${currentTheme.secondary} rounded-xl mr-4 text-white text-2xl relative`}>
-                  {item.icon}
-                  {item.completed && (
-                    <div className="absolute -top-1 -right-1 w-5 h-5 bg-green-500 rounded-full flex items-center justify-center">
-                      <CheckCircle size={12} className="text-white" />
-                    </div>
-                  )}
-                </div>
+                <div className={`flex items-center justify-center w-14 h-14 bg-gradient-to-br from-blue-400 to-purple-500 rounded-xl mr-4 text-white text-2xl relative`}>{item.icon}</div>
                 <div className="flex-1">
-                  <h3 className={`font-bold ${textClass} group-hover:text-blue-600 transition-colors mb-1`}>
-                    {item.title[language]}
-                  </h3>
+                  <h3 className={`font-bold ${textClass} mb-1`}>{item.title}</h3>
                   <div className={`text-sm ${subtextClass} flex items-center mb-2`}>
-                    <span className={`bg-gradient-to-r ${
-                      item.category[language].includes('基础') || item.category[language].includes('Basics') ? 'from-blue-100 to-blue-200 text-blue-700' :
-                      item.category[language].includes('运动') || item.category[language].includes('Exercise') ? 'from-green-100 to-green-200 text-green-700' :
-                      item.category[language].includes('用药') || item.category[language].includes('Medication') ? 'from-purple-100 to-purple-200 text-purple-700' :
-                      'from-orange-100 to-orange-200 text-orange-700'
-                    } px-2 py-1 rounded-full text-xs mr-2`}>
-                      {item.category[language]}
-                    </span>
-                    <Clock size={12} className="mr-1" />
-                    {item.duration[language]}
+                    <span className={`px-2 py-1 rounded-full text-xs mr-2 ${item.category.includes('基础') || item.category.includes('Basics') ? 'bg-blue-100 text-blue-700' : item.category.includes('运动') || item.category.includes('Exercise') ? 'bg-green-100 text-green-700' : item.category.includes('用药') || item.category.includes('Medication') ? 'bg-purple-100 text-purple-700' : 'bg-orange-100 text-orange-700'}`}>{item.category}</span>
+                    <Clock size={12} className="mr-1" />{item.duration}
                   </div>
                   <div className="flex items-center">
                     {item.completed ? (
-                      <span className="text-xs text-green-600 font-medium">
-                        {language === 'zh' ? '已完成' : 'Completed'}
-                      </span>
+                      <span className="text-xs text-green-600 font-medium">{language === 'zh' ? '已完成' : 'Completed'}</span>
                     ) : (
-                      <span className="text-xs text-blue-600 font-medium">
-                        {language === 'zh' ? '开始学习' : 'Start Learning'}
-                      </span>
+                      <span className="text-xs text-blue-600 font-medium">{language === 'zh' ? '开始学习' : 'Start Learning'}</span>
                     )}
                   </div>
                 </div>
-                <ChevronRight className={`${subtextClass} group-hover:text-blue-600 transition-colors`} size={20} />
+                <ChevronRight className={`${subtextClass}`} size={20} />
               </div>
             </div>
           ))}
@@ -954,7 +548,7 @@ const ASRedesign = () => {
             <div key={message.id} className={`flex ${message.type === 'user' ? 'justify-end' : 'justify-start'}`}>
               <div className={`max-w-xs lg:max-w-md px-4 py-2 rounded-2xl ${
                 message.type === 'user' 
-                  ? `bg-gradient-to-r ${currentTheme.primary} text-white` 
+                  ? `bg-gradient-to-r ${currentTheme.gradient} text-white` 
                   : `${cardClass} border`
               }`}>
                 <p className="text-sm">{message.content}</p>
@@ -982,7 +576,7 @@ const ASRedesign = () => {
           <button
             onClick={sendMessage}
             disabled={!chatInput.trim()}
-            className={`px-4 py-2 bg-gradient-to-r ${currentTheme.primary} text-white rounded-lg hover:opacity-90 transition-opacity disabled:opacity-50`}
+            className={`px-4 py-2 bg-gradient-to-r ${currentTheme.gradient} text-white rounded-lg hover:opacity-90 transition-opacity disabled:opacity-50`}
           >
             <Send size={16} />
           </button>
