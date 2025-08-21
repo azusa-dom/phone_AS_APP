@@ -1156,7 +1156,17 @@ const ASRedesign = () => {
             <span className={`${textClass} font-medium`}>{t[language].themeColor}</span>
             <div className="flex gap-2">
               {Object.keys(themeColors).map(color => (
-                <button key={color} onClick={() => setThemeColor(color)} className={`w-6 h-6 rounded-full ${themeColors[color].primary} ${themeColor === color ? 'ring-2 ring-offset-2 ring-gray-400' : ''}`} />
+                <button 
+                  key={color} 
+                  onClick={() => setThemeColor(color)} 
+                  className={`w-8 h-8 rounded-full transition-all duration-200 ${themeColor === color ? 'ring-2 ring-offset-2 ring-gray-400 scale-110' : 'scale-100'}`}
+                  style={{
+                    background: color === 'blue' ? 'linear-gradient(135deg, #3B82F6, #1D4ED8)' :
+                               color === 'green' ? 'linear-gradient(135deg, #10B981, #059669)' :
+                               color === 'purple' ? 'linear-gradient(135deg, #8B5CF6, #7C3AED)' :
+                               'linear-gradient(135deg, #F59E0B, #D97706)'
+                  }}
+                />
               ))}
             </div>
           </div>
