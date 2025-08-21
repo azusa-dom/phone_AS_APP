@@ -1,13 +1,13 @@
 {
   "files": {
-    "main.css": "/phone_AS_APP/static/css/main.0cf8f3ff.css",
-    "main.js": "/phone_AS_APP/static/js/main.c6f8697f.js",
+    "main.css": "/phone_AS_APP/static/css/main.65c30f0c.css",
+    "main.js": "/phone_AS_APP/static/js/main.932f58b8.js",
     "index.html": "/phone_AS_APP/index.html",
-    "main.0cf8f3ff.css.map": "/phone_AS_APP/static/css/main.0cf8f3ff.css.map",
-    "main.c6f8697f.js.map": "/phone_AS_APP/static/js/main.c6f8697f.js.map"
+    "main.65c30f0c.css.map": "/phone_AS_APP/static/css/main.65c30f0c.css.map",
+    "main.932f58b8.js.map": "/phone_AS_APP/static/js/main.932f58b8.js.map"
   },
   "entrypoints": [
-    "static/css/main.0cf8f3ff.css",
-    "static/js/main.c6f8697f.js"
+    "static/css/main.65c30f0c.css",
+    "static/js/main.932f58b8.js"
   ]
 }
