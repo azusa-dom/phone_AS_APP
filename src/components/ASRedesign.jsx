@@ -541,7 +541,7 @@ const ASRedesign = () => {
         {chatMessages.length === 0 ? (
           <div className={`text-center ${subtextClass} py-8`}>
             <Bot size={48} className="mx-auto mb-4 opacity-50" />
-            <p>{language === 'zh' ? '您好！我是AS健康助手，有什么可以帮助您的吗？' : 'Hello! I\'m the AS Health Assistant. How can I help you?'}</p>
+            <p>{language === 'zh' ? '您好！我是您的健康助手，有什么可以帮助您的吗？' : 'Hello! I\'m your health assistant. How can I help you?'}</p>
           </div>
         ) : (
           chatMessages.map((message) => (
