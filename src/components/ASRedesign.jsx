@@ -564,10 +564,14 @@ const ASRedesign = () => {
           <input
             type="text"
             value={chatInput}
-            onChange={(e) => setChatInput(e.target.value)}
+            onChange={(e) => {
+              console.log('Input change:', e.target.value);
+              setChatInput(e.target.value);
+            }}
             onKeyPress={(e) => e.key === 'Enter' && sendMessage()}
             placeholder={t[language].chatPlaceholder}
             className={`flex-1 px-3 py-2 rounded-lg border ${isDark ? 'bg-gray-700 border-gray-600' : 'bg-gray-50 border-gray-300'} focus:outline-none focus:ring-2 focus:ring-blue-500`}
+            maxLength={500}
           />
           <button
             onClick={sendMessage}
@@ -632,7 +636,7 @@ const ASRedesign = () => {
           </div>
           <div className="flex items-center justify-between">
             <span className={`${textClass} font-medium`}>{language === 'zh' ? '症状记录提醒' : 'Symptom Tracking'}</span>
-            <div className="relative inline-flex h-6 w-11 items-center rounded-full bg-blue-600"><span className="inline-block h-4 w-4 transform rounded-full bg白 transition-transform translate-x-6" /></div>
+            <div className="relative inline-flex h-6 w-11 items-center rounded-full bg-blue-600"><span className="inline-block h-4 w-4 transform rounded-full bg-white transition-transform translate-x-6" /></div>
           </div>
         </div>
       </div>
