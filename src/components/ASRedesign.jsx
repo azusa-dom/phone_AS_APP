@@ -104,13 +104,19 @@ const ASRedesign = () => {
       '疼痛': '对于强直性脊柱炎的疼痛管理，建议：1）按医嘱服用抗炎药物 2）进行适度的拉伸运动 3）保持正确的姿势。⚠️ 仅供参考，请遵循医生建议。',
       '运动': 'AS患者适合的运动包括：游泳、太极、瑜伽和脊柱拉伸操。避免高冲击性运动。建议咨询理疗师制定个人化运动计划。',
       '饮食': '抗炎饮食建议：多食用富含Omega-3的鱼类、新鲜蔬果、全谷物。减少糖分、加工食品和饱和脂肪摄入。',
-      'default': '很抱歉，我无法回答这个问题。建议您咨询专业医生获得准确的医疗建议。⚠️ AI回答仅供参考。'
+      '疲倦': 'AS患者疲倦的常见原因：1）炎症活动 2）睡眠质量差 3）药物副作用。建议：保持规律作息、适度运动、营养均衡。如持续疲倦请咨询医生。',
+      '疲劳': 'AS疲劳管理：1）保证7-8小时优质睡眠 2）避免过度劳累 3）进行温和的有氧运动 4）注意营养补充。严重疲劳需就医检查。',
+      '睡眠': '改善AS患者睡眠：1）保持规律作息 2）睡前避免刺激性活动 3）创造安静舒适的睡眠环境 4）必要时咨询医生调整用药时间。',
+      'default': '我理解您的困扰。作为AS健康助手，我建议您咨询专业医生获得个性化建议。同时可以尝试：保持规律作息、适度运动、营养均衡。⚠️ 仅供参考，请遵循医生建议。'
     },
     en: {
       'pain': 'For AS pain management: 1) Take anti-inflammatory medications as prescribed 2) Perform gentle stretching exercises 3) Maintain good posture. ⚠️ For reference only, please follow medical advice.',
       'exercise': 'Suitable exercises for AS include: swimming, tai chi, yoga, and spinal stretching. Avoid high-impact activities. Consult a physiotherapist for personalized plans.',
       'diet': 'Anti-inflammatory diet: Include omega-3 rich fish, fresh fruits/vegetables, whole grains. Reduce sugar, processed foods, and saturated fats.',
-      'default': 'Sorry, I cannot answer this question. Please consult a healthcare professional for accurate medical advice. ⚠️ AI responses are for reference only.'
+      'tired': 'Common causes of tiredness in AS: 1) Inflammatory activity 2) Poor sleep quality 3) Medication side effects. Suggestions: maintain regular sleep schedule, moderate exercise, balanced nutrition. Consult doctor if persistent.',
+      'fatigue': 'AS fatigue management: 1) Ensure 7-8 hours quality sleep 2) Avoid overexertion 3) Gentle aerobic exercise 4) Nutritional support. Severe fatigue requires medical evaluation.',
+      'sleep': 'Improve AS sleep: 1) Regular sleep schedule 2) Avoid stimulating activities before bed 3) Create quiet, comfortable sleep environment 4) Consult doctor about medication timing if needed.',
+      'default': 'I understand your concern. As an AS health assistant, I recommend consulting a healthcare professional for personalized advice. You can also try: regular sleep schedule, moderate exercise, balanced nutrition. ⚠️ For reference only, please follow medical advice.'
     }
   };
 
@@ -131,6 +137,12 @@ const ASRedesign = () => {
         response = aiResponses[language]['运动'] || aiResponses[language]['exercise'];
       } else if (input.includes('饮食') || input.includes('diet')) {
         response = aiResponses[language]['饮食'] || aiResponses[language]['diet'];
+      } else if (input.includes('疲倦') || input.includes('tired')) {
+        response = aiResponses[language]['疲倦'] || aiResponses[language]['tired'];
+      } else if (input.includes('疲劳') || input.includes('fatigue')) {
+        response = aiResponses[language]['疲劳'] || aiResponses[language]['fatigue'];
+      } else if (input.includes('睡眠') || input.includes('sleep')) {
+        response = aiResponses[language]['睡眠'] || aiResponses[language]['sleep'];
       }
       
       const aiMessage = { id: Date.now() + 1, type: 'ai', content: response };
