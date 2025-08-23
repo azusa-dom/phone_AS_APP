@@ -1,6 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Home, Calendar, Pill, TrendingUp, Book, Settings, Plus, ChevronRight, Bell, Download, Share2, AlertCircle, Clock, Heart, Zap, CheckCircle, Trash2, Save, Send, Bot, Palette, Shield, User, Activity, Target, LineChart } from 'lucide-react';
 import { LineChart as RechartsLineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, AreaChart, Area, BarChart as RechartsBarChart, Bar } from 'recharts';
+import { dataStorage, symptomTracker, medicationManager } from '../utils/storage';
+import { pdfExporter } from '../utils/pdfExport';
 
 const ASRedesign = () => {
   const [currentPage, setCurrentPage] = useState('home');
@@ -21,28 +23,9 @@ const ASRedesign = () => {
   });
   const [chatMessages, setChatMessages] = useState([]);
   const [chatInput, setChatInput] = useState('');
-  const [medications, setMedications] = useState([
-    {
-      id: 1,
-      name: { zh: '阿达木单抗 (修美乐)', en: 'Adalimumab (Humira)' },
-      type: 'TNFi',
-      dosage: '40mg',
-      frequency: { zh: '每2周', en: 'Every 2 weeks' },
-      nextDose: '2025-08-25',
-      adherence: 95,
-      sideEffects: { zh: [], en: [] }
-    },
-    {
-      id: 2,
-      name: { zh: '塞来昔布', en: 'Celecoxib' },
-      type: 'NSAID',
-      dosage: '200mg',
-      frequency: { zh: '每日2次', en: 'Twice daily' },
-      nextDose: '2025-08-22',
-      adherence: 88,
-      sideEffects: { zh: ['胃痛'], en: ['Stomach pain'] }
-    }
-  ]);
+  const [medications, setMedications] = useState([]);
+  const [symptomRecords, setSymptomRecords] = useState([]);
+  const [isLoading, setIsLoading] = useState(false);
 
   // 主题色配置
   const themeColors = {
@@ -306,6 +289,51 @@ const ASRedesign = () => {
   const subtextClass = isDark ? 'text-gray-300' : 'text-gray-500';
   const currentTheme = themeColors[themeColor];
 
+  // 数据加载和保存
+  useEffect(() => {
+    loadAppData();
+  }, []);
+
+  // 加载应用数据
+  const loadAppData = () => {
+    try {
+      const data = dataStorage.loadData();
+      setLanguage(data.settings?.language || 'zh');
+      setTheme(data.settings?.theme || 'light');
+      setThemeColor(data.settings?.themeColor || 'blue');
+      setMedications(data.medications || []);
+      setSymptomRecords(data.symptoms?.dailyRecords || []);
+    } catch (error) {
+      console.error('加载数据失败:', error);
+    }
+  };
+
+  // 保存应用数据
+  const saveAppData = () => {
+    try {
+      const data = dataStorage.loadData();
+      data.settings = {
+        ...data.settings,
+        language,
+        theme,
+        themeColor
+      };
+      data.medications = medications;
+      data.symptoms = {
+        ...data.symptoms,
+        dailyRecords: symptomRecords
+      };
+      dataStorage.saveData(data);
+    } catch (error) {
+      console.error('保存数据失败:', error);
+    }
+  };
+
+  // 当关键数据变化时自动保存
+  useEffect(() => {
+    saveAppData();
+  }, [language, theme, themeColor, medications, symptomRecords]);
+
   // 添加触发器选择逻辑
   const toggleTrigger = (triggerId) => {
     setSelectedTriggers(prev => 
@@ -328,7 +356,10 @@ const ASRedesign = () => {
         adherence: 100,
         sideEffects: { zh: [], en: [] }
       };
-      setMedications([...medications, newMed]);
+      
+      // 使用真实的数据管理器
+      const addedMed = medicationManager.addMedication(newMed);
+      setMedications([...medications, addedMed]);
       setNewMedication({ name: '', type: 'NSAID', dosage: '', frequency: '' });
       setShowAddMed(false);
     }
@@ -336,7 +367,33 @@ const ASRedesign = () => {
 
   // 删除药物功能
   const handleDeleteMedication = (id) => {
+    medicationManager.deleteMedication(id);
     setMedications(medications.filter(med => med.id !== id));
+  };
+
+  // 保存症状记录
+  const saveSymptomRecord = () => {
+    const record = {
+      painLevel,
+      stiffnessTime,
+      fatigue,
+      isFlare,
+      selectedTriggers,
+      timestamp: new Date().toISOString()
+    };
+    
+    // 使用真实的症状追踪器
+    const newRecord = symptomTracker.addSymptomRecord(record);
+    setSymptomRecords([...symptomRecords, newRecord]);
+    
+    // 重置表单
+    setPainLevel(3);
+    setStiffnessTime(30);
+    setFatigue(3);
+    setIsFlare(false);
+    setSelectedTriggers([]);
+    
+    alert(language === 'zh' ? '症状记录已保存！' : 'Symptom record saved!');
   };
 
   // 自定义Tooltip组件，确保完全国际化
@@ -668,10 +725,7 @@ const ASRedesign = () => {
         )}
       </div>
       <button 
-        onClick={() => {
-          // 模拟保存记录功能
-          alert(language === 'zh' ? '记录已保存！' : 'Record saved!');
-        }}
+        onClick={saveSymptomRecord}
         className="w-full bg-gradient-to-r from-blue-500 to-purple-600 text-white py-4 rounded-2xl font-bold text-lg hover:from-blue-600 hover:to-purple-700 transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-105"
       >
         {t[language].saveRecord}
@@ -726,8 +780,11 @@ const ASRedesign = () => {
             <div className="flex gap-3">
               <button 
                 onClick={() => {
-                  // 模拟已用药功能
-                  alert(language === 'zh' ? '已记录用药！' : 'Medication taken recorded!');
+                  if (medicationManager.recordMedicationTaken(med.id)) {
+                    alert(language === 'zh' ? '已记录用药！' : 'Medication taken recorded!');
+                  } else {
+                    alert(language === 'zh' ? '记录失败，请重试' : 'Record failed, please try again');
+                  }
                 }}
                 className="flex-1 bg-green-500 text-white py-2 rounded-xl font-medium hover:bg-green-600 transition-colors"
               >
@@ -735,7 +792,6 @@ const ASRedesign = () => {
               </button>
               <button 
                 onClick={() => {
-                  // 模拟跳过用药功能
                   alert(language === 'zh' ? '已记录跳过用药！' : 'Medication skip recorded!');
                 }}
                 className={`flex-1 ${isDark ? 'bg-gray-700 text-gray-300' : 'bg-gray-100 text-gray-700'} py-2 rounded-xl font-medium hover:bg-gray-200 transition-colors`}
@@ -860,24 +916,67 @@ const ASRedesign = () => {
         <h1 className={`text-2xl font-bold ${textClass}`}>{t[language].reports}</h1>
         <div className="flex gap-2">
           <button 
-            onClick={() => {
-              // 模拟导出PDF功能
-              alert(language === 'zh' ? '正在导出PDF报告...' : 'Exporting PDF report...');
+            onClick={async () => {
+              setIsLoading(true);
+              try {
+                const data = dataStorage.loadData();
+                const symptomData = {
+                  stats: symptomTracker.getSymptomStats(),
+                  records: symptomRecords.slice(-30) // 最近30条记录
+                };
+                
+                await pdfExporter.exportSymptomReport(symptomData, language);
+                pdfExporter.savePDF(`as_symptom_report_${new Date().toISOString().split('T')[0]}.pdf`);
+                
+                alert(language === 'zh' ? 'PDF报告导出成功！' : 'PDF report exported successfully!');
+              } catch (error) {
+                console.error('导出失败:', error);
+                alert(language === 'zh' ? '导出失败，请重试' : 'Export failed, please try again');
+              } finally {
+                setIsLoading(false);
+              }
             }}
-            className={`p-2 ${cardClass} rounded-xl shadow-sm border hover:shadow-md transition-all`}
+            disabled={isLoading}
+            className={`p-2 ${cardClass} rounded-xl shadow-sm border hover:shadow-md transition-all ${isLoading ? 'opacity-50' : ''}`}
           >
-            <Download size={20} className={`${subtextClass}`} />
+            {isLoading ? (
+              <div className="w-5 h-5 border-2 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+            ) : (
+              <Download size={20} className={`${subtextClass}`} />
+            )}
           </button>
           <button 
-            onClick={() => {
-              // 模拟分享功能
-              if (navigator.share) {
-                navigator.share({
-                  title: language === 'zh' ? 'AS健康报告' : 'AS Health Report',
-                  text: language === 'zh' ? '查看我的健康数据趋势' : 'Check out my health data trends'
-                });
-              } else {
-                alert(language === 'zh' ? '复制链接成功！' : 'Link copied successfully!');
+            onClick={async () => {
+              try {
+                const data = dataStorage.loadData();
+                const symptomData = {
+                  stats: symptomTracker.getSymptomStats(),
+                  records: symptomRecords.slice(-30)
+                };
+                
+                // 生成PDF报告
+                await pdfExporter.exportSymptomReport(symptomData, language);
+                
+                // 尝试使用原生分享API
+                if (navigator.share) {
+                  const pdfBlob = pdfExporter.doc.output('blob');
+                  const pdfFile = new File([pdfBlob], `as_health_report_${new Date().toISOString().split('T')[0]}.pdf`, {
+                    type: 'application/pdf'
+                  });
+                  
+                  await navigator.share({
+                    title: language === 'zh' ? 'AS健康报告' : 'AS Health Report',
+                    text: language === 'zh' ? '我的健康报告' : 'My health report',
+                    files: [pdfFile]
+                  });
+                } else {
+                  // 回退到下载
+                  pdfExporter.savePDF(`as_health_report_${new Date().toISOString().split('T')[0]}.pdf`);
+                  alert(language === 'zh' ? '报告已下载，请手动分享' : 'Report downloaded, please share manually');
+                }
+              } catch (error) {
+                console.error('分享失败:', error);
+                alert(language === 'zh' ? '分享失败，请重试' : 'Share failed, please try again');
               }
             }}
             className={`p-2 ${cardClass} rounded-xl shadow-sm border hover:shadow-md transition-all`}
@@ -959,10 +1058,66 @@ const ASRedesign = () => {
 
       {/* Export Options */}
       <div className="grid grid-cols-2 gap-4">
-        <button className={`bg-gradient-to-r ${currentTheme.primary} text-white py-4 rounded-2xl font-bold hover:shadow-xl transition-all duration-200 transform hover:scale-105`}>
-          {t[language].exportPDF}
+        <button 
+          onClick={async () => {
+            setIsLoading(true);
+            try {
+              const data = dataStorage.loadData();
+              await pdfExporter.exportFullHealthReport(data, language);
+              pdfExporter.savePDF(`as_complete_health_report_${new Date().toISOString().split('T')[0]}.pdf`);
+              alert(language === 'zh' ? '完整健康报告导出成功！' : 'Complete health report exported successfully!');
+            } catch (error) {
+              console.error('导出失败:', error);
+              alert(language === 'zh' ? '导出失败，请重试' : 'Export failed, please try again');
+            } finally {
+              setIsLoading(false);
+            }
+          }}
+          disabled={isLoading}
+          className={`bg-gradient-to-r ${currentTheme.primary} text-white py-4 rounded-2xl font-bold hover:shadow-xl transition-all duration-200 transform hover:scale-105 ${isLoading ? 'opacity-50' : ''}`}
+        >
+          {isLoading ? (
+            <div className="flex items-center justify-center">
+              <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"></div>
+              {language === 'zh' ? '导出中...' : 'Exporting...'}
+            </div>
+          ) : (
+            t[language].exportPDF
+          )}
         </button>
-        <button className="bg-gradient-to-r from-purple-500 to-purple-600 text-white py-4 rounded-2xl font-bold hover:from-purple-600 hover:to-purple-700 transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-105">
+        <button 
+          onClick={async () => {
+            try {
+              const data = dataStorage.loadData();
+              const symptomData = {
+                stats: symptomTracker.getSymptomStats(),
+                records: symptomRecords.slice(-30)
+              };
+              
+              await pdfExporter.exportSymptomReport(symptomData, language);
+              
+              if (navigator.share) {
+                const pdfBlob = pdfExporter.doc.output('blob');
+                const pdfFile = new File([pdfBlob], `as_health_report_${new Date().toISOString().split('T')[0]}.pdf`, {
+                  type: 'application/pdf'
+                });
+                
+                await navigator.share({
+                  title: language === 'zh' ? 'AS健康报告' : 'AS Health Report',
+                  text: language === 'zh' ? '我的健康报告' : 'My health report',
+                  files: [pdfFile]
+                });
+              } else {
+                pdfExporter.savePDF(`as_health_report_${new Date().toISOString().split('T')[0]}.pdf`);
+                alert(language === 'zh' ? '报告已下载，请手动分享' : 'Report downloaded, please share manually');
+              }
+            } catch (error) {
+              console.error('分享失败:', error);
+              alert(language === 'zh' ? '分享失败，请重试' : 'Share failed, please try again');
+            }
+          }}
+          className="bg-gradient-to-r from-purple-500 to-purple-600 text-white py-4 rounded-2xl font-bold hover:from-purple-600 hover:to-purple-700 shadow-lg hover:shadow-xl transform hover:scale-105"
+        >
           {t[language].shareReport}
         </button>
       </div>
