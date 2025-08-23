@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from 'react';
-import { Home, Calendar, Pill, TrendingUp, Book, Settings, Plus, ChevronRight, Bell, Download, Share2, AlertCircle, Clock, Target, Activity, Heart, Moon, Sun, User, Shield, Globe, Palette, Volume2, Eye, CheckCircle, XCircle, BarChart3, PieChart, LineChart, Camera, FileText, Stethoscope, Zap, Edit3, Trash2, Save, MessageCircle, Send, Bot } from 'lucide-react';
-import { LineChart as RechartsLineChart, Line, AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart as RechartsPieChart, Cell, BarChart as RechartsBarChart, Bar } from 'recharts';
+import React, { useState } from 'react';
+import { Home, Calendar, Pill, TrendingUp, Book, Settings, Plus, ChevronRight, Bell, Download, Share2, AlertCircle, Clock, Heart, Zap, CheckCircle, Trash2, Save, Send, Bot, Palette, Shield, User, Activity, Target, LineChart } from 'lucide-react';
+import { LineChart as RechartsLineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, AreaChart, Area, BarChart as RechartsBarChart, Bar } from 'recharts';
 
 const ASRedesign = () => {
   const [currentPage, setCurrentPage] = useState('home');
