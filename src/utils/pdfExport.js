@@ -1,6 +1,20 @@
 import jsPDF from 'jspdf';
-import 'jspdf-autotable';
 import html2canvas from 'html2canvas';
+
+// 动态导入jspdf-autotable
+let autoTableLoaded = false;
+const loadAutoTable = async () => {
+  if (!autoTableLoaded) {
+    try {
+      await import('jspdf-autotable');
+      autoTableLoaded = true;
+      console.log('jspdf-autotable 加载成功');
+    } catch (error) {
+      console.error('jspdf-autotable 加载失败:', error);
+      throw new Error('PDF表格功能不可用');
+    }
+  }
+};
 
 // PDF导出工具类
 export class PDFExporter {
@@ -13,9 +27,12 @@ export class PDFExporter {
   }
 
   // 初始化PDF文档
-  initDocument(title = 'AS健康报告') {
+  initDocument(title = 'Joint Health Report') {
     this.doc = new jsPDF('p', 'mm', 'a4');
     this.currentY = 20;
+    
+    // 设置字体为更兼容的字体
+    this.doc.setFont('helvetica');
     
     // 添加标题
     this.addTitle(title);
@@ -51,7 +68,10 @@ export class PDFExporter {
       this.currentY = 20;
     }
     
-    this.doc.text(text, this.margin, this.currentY);
+    // 确保文本是可打印ASCII字符（空格到~），避免乱码
+    const cleanText = String(text).replace(/[^\u0020-\u007E]/g, '');
+    
+    this.doc.text(cleanText, this.margin, this.currentY);
     this.currentY += fontSize + 2;
   }
 
@@ -63,10 +83,13 @@ export class PDFExporter {
   }
 
   // 添加表格
-  addTable(headers, data, title = '') {
+  async addTable(headers, data, title = '') {
     if (title) {
       this.addSubtitle(title);
     }
+    
+    // 确保autoTable已加载
+    await loadAutoTable();
     
     // 检查是否需要换页
     if (this.currentY > this.pageHeight - 50) {
@@ -77,6 +100,18 @@ export class PDFExporter {
     const tableData = data.map(row => 
       headers.map(header => row[header.key] || '')
     );
+    
+    // 检查autoTable方法是否存在
+    if (typeof this.doc.autoTable !== 'function') {
+      console.error('autoTable方法不可用');
+      // 回退到简单文本显示
+      this.addText('表格数据:', 12);
+      data.forEach((row, index) => {
+        const rowText = headers.map(h => `${h.label}: ${row[h.key] || ''}`).join(' | ');
+        this.addText(`${index + 1}. ${rowText}`, 10);
+      });
+      return;
+    }
     
     this.doc.autoTable({
       head: [headers.map(h => h.label)],
@@ -129,219 +164,156 @@ export class PDFExporter {
   }
 
   // 导出症状报告
-  async exportSymptomReport(symptomData, language = 'zh') {
-    const t = {
-      zh: {
-        title: 'AS症状健康报告',
-        subtitle: '症状记录与分析',
-        painLevel: '疼痛程度',
-        stiffness: '晨僵时长',
-        fatigue: '疲劳程度',
-        flareStatus: '发作状态',
-        date: '日期',
-        value: '数值',
-        status: '状态',
-        summary: '症状总结',
-        recommendations: '建议'
-      },
-      en: {
-        title: 'AS Symptom Health Report',
-        subtitle: 'Symptom Records & Analysis',
-        painLevel: 'Pain Level',
-        stiffness: 'Morning Stiffness',
-        fatigue: 'Fatigue Level',
-        flareStatus: 'Flare Status',
-        date: 'Date',
-        value: 'Value',
-        status: 'Status',
-        summary: 'Symptom Summary',
-        recommendations: 'Recommendations'
-      }
-    };
-
-    this.initDocument(t[language].title);
-    
-    // 添加基本信息
-    this.addText(`${t[language].subtitle}`, 14);
-    this.addText(`生成时间: ${new Date().toLocaleString(language === 'zh' ? 'zh-CN' : 'en-US')}`);
-    this.addLine();
-    
-    // 添加症状统计
-    if (symptomData.stats) {
-      this.addSubtitle(t[language].summary);
-      this.addText(`总记录数: ${symptomData.stats.totalRecords}`);
-      this.addText(`平均疼痛: ${symptomData.stats.avgPain}/10`);
-      this.addText(`平均晨僵: ${symptomData.stats.avgStiffness}分钟`);
-      this.addText(`平均疲劳: ${symptomData.stats.avgFatigue}/10`);
-      this.addText(`发作次数: ${symptomData.stats.flareCount}`);
+  async exportSymptomReport(symptomData, language = 'en') { // 强制使用英文避免乱码
+    try {
+      // 强制使用英文，避免中文字符乱码
+      this.initDocument('Joint Health Report');
+      
+      // 添加基本信息
+      this.addText('Symptom Tracking & Analysis', 14);
+      this.addText(`Generated: ${new Date().toLocaleString('en-US')}`);
       this.addLine();
-    }
-    
-    // 添加症状记录表格
-    if (symptomData.records && symptomData.records.length > 0) {
-      const headers = [
-        { key: 'date', label: t[language].date },
-        { key: 'painLevel', label: t[language].painLevel },
-        { key: 'stiffness', label: t[language].stiffness },
-        { key: 'fatigue', label: t[language].fatigue },
-        { key: 'flare', label: t[language].flareStatus }
+      
+      // 添加症状统计
+      if (symptomData.stats) {
+        this.addSubtitle('Symptom Summary');
+        this.addText(`Total Records: ${symptomData.stats.totalRecords}`);
+        this.addText(`Average Pain: ${symptomData.stats.avgPain}/10`);
+        this.addText(`Average Stiffness: ${symptomData.stats.avgStiffness} minutes`);
+        this.addText(`Average Fatigue: ${symptomData.stats.avgFatigue}/10`);
+        this.addText(`Flare Count: ${symptomData.stats.flareCount}`);
+        this.addLine();
+      }
+      
+      // 添加症状记录表格
+      if (symptomData.records && symptomData.records.length > 0) {
+        const headers = [
+          { key: 'date', label: 'Date' },
+          { key: 'painLevel', label: 'Pain Level' },
+          {text: 'Morning Stiffness' },
+          { key: 'fatigue', label: 'Fatigue Level' },
+          { key: 'flare', label: 'Flare Status' }
+        ];
+        
+        const tableData = symptomData.records.map(record => ({
+          date: new Date(record.timestamp).toLocaleDateString('en-US'),
+          painLevel: record.painLevel || '-',
+          stiffness: record.stiffnessTime ? `${record.stiffnessTime} min` : '-',
+          fatigue: record.fatigue || '-',
+          flare: record.isFlare ? 'Yes' : 'No'
+        }));
+        
+        await this.addTable(headers, tableData, 'Symptom Records');
+      }
+      
+      // 添加建议
+      this.addSubtitle('Health Recommendations');
+      const recommendations = [
+        'Regular symptom tracking helps doctors understand disease progression',
+        'Maintain regular sleep schedule, avoid overexertion',
+        'Take medications as prescribed, do not stop arbitrarily',
+        'Regular rehabilitation exercises to maintain joint flexibility',
+        'Seek medical attention if symptoms persist or worsen'
       ];
       
-      const tableData = symptomData.records.map(record => ({
-        date: new Date(record.timestamp).toLocaleDateString(language === 'zh' ? 'zh-CN' : 'en-US'),
-        painLevel: record.painLevel || '-',
-        stiffness: record.stiffnessTime ? `${record.stiffnessTime}分钟` : '-',
-        fatigue: record.fatigue || '-',
-        flare: record.isFlare ? '是' : '否'
-      }));
+      recommendations.forEach(rec => this.addText(`• ${rec}`));
       
-      this.addTable(headers, tableData, '症状记录详情');
+      return this.doc;
+    } catch (error) {
+      console.error('Export symptom report failed:', error);
+      throw error;
     }
-    
-    // 添加建议
-    this.addSubtitle(t[language].recommendations);
-    this.addText('• 定期记录症状变化，帮助医生了解病情发展');
-    this.addText('• 保持规律作息，避免过度劳累');
-    this.addText('• 按医嘱用药，不要随意停药');
-    this.addText('• 定期进行康复运动，保持关节灵活性');
-    this.addText('• 如症状持续或加重，请及时就医');
-    
-    return this.doc;
   }
 
   // 导出用药报告
-  exportMedicationReport(medicationData, language = 'zh') {
-    const t = {
-      zh: {
-        title: 'AS用药管理报告',
-        subtitle: '药物信息与依从性',
-        medicationName: '药物名称',
-        type: '类型',
-        dosage: '剂量',
-        frequency: '频率',
-        nextDose: '下次用药',
-        adherence: '依从性',
-        sideEffects: '副作用'
-      },
-      en: {
-        title: 'AS Medication Management Report',
-        subtitle: 'Medication Info & Adherence',
-        medicationName: 'Medication Name',
-        type: 'Type',
-        dosage: 'Dosage',
-        frequency: 'Frequency',
-        nextDose: 'Next Dose',
-        adherence: 'Adherence',
-        sideEffects: 'Side Effects'
-      }
-    };
-
-    this.initDocument(t[language].title);
+  exportMedicationReport(medicationData, language = 'en') { // 强制使用英文避免乱码
+    // 强制使用英文，避免中文字符乱码
+    this.initDocument('AS Medication Management Report');
     
-    this.addText(`${t[language].subtitle}`, 14);
-    this.addText(`生成时间: ${new Date().toLocaleString(language === 'zh' ? 'zh-CN' : 'en-US')}`);
+    this.addText('Medication Info & Adherence', 14);
+    this.addText(`Generated: ${new Date().toLocaleString('en-US')}`);
     this.addLine();
     
     if (medicationData && medicationData.length > 0) {
       const headers = [
-        { key: 'name', label: t[language].medicationName },
-        { key: 'type', label: t[language].type },
-        { key: 'dosage', label: t[language].dosage },
-        { key: 'frequency', label: t[language].frequency },
-        { key: 'nextDose', label: t[language].nextDose },
-        { key: 'adherence', label: t[language].adherence }
+        { key: 'name', label: 'Medication Name' },
+        { key: 'type', label: 'Type' },
+        { key: 'dosage', label: 'Dosage' },
+        { key: 'frequency', label: 'Frequency' },
+        { key: 'nextDose', label: 'Next Dose' },
+        { key: 'adherence', label: 'Adherence' }
       ];
       
       const tableData = medicationData.map(med => ({
-        name: med.name[language] || med.name,
+        name: typeof med.name === 'object' ? med.name.en || med.name.zh || med.name : med.name,
         type: med.type,
         dosage: med.dosage,
-        frequency: typeof med.frequency === 'object' ? med.frequency[language] : med.frequency,
+        frequency: typeof med.frequency === 'object' ? med.frequency.en || med.frequency.zh || med.frequency : med.frequency,
         nextDose: med.nextDose,
         adherence: `${med.adherence}%`
       }));
       
-      this.addTable(headers, tableData, '药物信息');
+      this.addTable(headers, tableData, 'Medication Information');
     }
     
     return this.doc;
   }
 
   // 导出完整健康报告
-  async exportFullHealthReport(data, language = 'zh') {
-    const t = {
-      zh: {
-        title: 'AS完整健康报告',
-        subtitle: '综合健康管理报告',
-        userInfo: '用户信息',
-        symptomAnalysis: '症状分析',
-        medicationManagement: '用药管理',
-        educationProgress: '教育进度',
-        healthRecommendations: '健康建议'
-      },
-      en: {
-        title: 'AS Complete Health Report',
-        subtitle: 'Comprehensive Health Management Report',
-        userInfo: 'User Information',
-        symptomAnalysis: 'Symptom Analysis',
-        medicationManagement: 'Medication Management',
-        educationProgress: 'Education Progress',
-        healthRecommendations: 'Health Recommendations'
-      }
-    };
-
-    this.initDocument(t[language].title);
+  async exportFullHealthReport(data, language = 'en') { // 强制使用英文避免乱码
+    // 强制使用英文，避免中文字符乱码
+    this.initDocument('AS Complete Health Report');
     
-    this.addText(`${t[language].subtitle}`, 14);
-    this.addText(`生成时间: ${new Date().toLocaleString(language === 'zh' ? 'zh-CN' : 'en-US')}`);
+    this.addText('Comprehensive Health Management Report', 14);
+    this.addText(`Generated: ${new Date().toLocaleString('en-US')}`);
     this.addLine();
     
     // 用户信息
     if (data.userProfile) {
-      this.addSubtitle(t[language].userInfo);
-      this.addText(`姓名: ${data.userProfile.name || '未设置'}`);
-      this.addText(`年龄: ${data.userProfile.age || '未设置'}`);
-      this.addText(`诊断日期: ${data.userProfile.diagnosisDate || '未设置'}`);
+      this.addSubtitle('User Information');
+      this.addText(`Name: ${data.userProfile.name || 'Not Set'}`);
+      this.addText(`Age: ${data.userProfile.age || 'Not Set'}`);
+      this.addText(`Diagnosis Date: ${data.userProfile.diagnosisDate || 'Not Set'}`);
       this.addLine();
     }
     
     // 症状分析
     if (data.symptoms) {
-      this.addSubtitle(t[language].symptomAnalysis);
+      this.addSubtitle('Symptom Analysis');
       const stats = this.calculateSymptomStats(data.symptoms.dailyRecords);
-      this.addText(`总记录数: ${stats.totalRecords}`);
-      this.addText(`平均疼痛: ${stats.avgPain}/10`);
-      this.addText(`平均晨僵: ${stats.avgStiffness}分钟`);
-      this.addText(`平均疲劳: ${stats.avgFatigue}/10`);
-      this.addText(`发作次数: ${stats.flareCount}`);
+      this.addText(`Total Records: ${stats.totalRecords}`);
+      this.addText(`Average Pain: ${stats.avgPain}/10`);
+      this.addText(`Average Stiffness: ${stats.avgStiffness} minutes`);
+      this.addText(`Average Fatigue: ${stats.avgFatigue}/10`);
+      this.addText(`Flare Count: ${stats.flareCount}`);
       this.addLine();
     }
     
     // 用药管理
     if (data.medications && data.medications.length > 0) {
-      this.addSubtitle(t[language].medicationManagement);
-      this.addText(`当前用药: ${data.medications.length}种`);
-      this.addText(`平均依从性: ${this.calculateAverageAdherence(data.medications)}%`);
+      this.addSubtitle('Medication Management');
+      this.addText(`Current Medications: ${data.medications.length} types`);
+      this.addText(`Average Adherence: ${this.calculateAverageAdherence(data.medications)}%`);
       this.addLine();
     }
     
     // 教育进度
     if (data.education) {
-      this.addSubtitle(t[language].educationProgress);
-      this.addText(`已完成课程: ${data.education.completedCourses.length}个`);
-      this.addText(`收藏内容: ${data.education.bookmarks.length}个`);
-      this.addText(`学习笔记: ${data.education.notes.length}条`);
+      this.addSubtitle('Education Progress');
+      this.addText(`Completed Courses: ${data.education.completedCourses.length} courses`);
+      this.addText(`Bookmarked Content: ${data.education.bookmarks.length} items`);
+      this.addText(`Learning Notes: ${data.education.notes.length} notes`);
       this.addLine();
     }
     
     // 健康建议
-    this.addSubtitle(t[language].healthRecommendations);
-    this.addText('• 保持规律的症状记录，帮助医生了解病情变化');
-    this.addText('• 严格按医嘱用药，提高治疗依从性');
-    this.addText('• 坚持康复运动，保持关节灵活性');
-    this.addText('• 学习AS相关知识，提高自我管理能力');
-    this.addText('• 定期复查，及时调整治疗方案');
-    this.addText('• 保持积极心态，建立良好的生活习惯');
+    this.addSubtitle('Health Recommendations');
+    this.addText('• Maintain regular symptom tracking to help doctors understand disease progression');
+    this.addText('• Take medications as prescribed to improve treatment adherence');
+    this.addText('• Continue rehabilitation exercises to maintain joint flexibility');
+    this.addText('• Learn about AS to improve self-management skills');
+    this.addText('• Regular follow-up visits to adjust treatment plans');
+    this.addText('• Maintain positive attitude and establish good lifestyle habits');
     
     return this.doc;
   }

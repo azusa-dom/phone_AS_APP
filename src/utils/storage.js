@@ -87,6 +87,7 @@ export class DataStorage {
           sideEffects: { zh: ['胃痛'], en: ['Stomach pain'] }
         }
       ],
+      medicationRecent: [],
       education: {
         completedCourses: [],
         bookmarks: [],
@@ -111,6 +112,7 @@ export class DataStorage {
     return {
       ...defaultData,
       ...data,
+      medicationRecent: Array.isArray(data.medicationRecent) ? data.medicationRecent : defaultData.medicationRecent,
       symptoms: {
         ...defaultData.symptoms,
         ...data.symptoms,

@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { Home, Calendar, Pill, TrendingUp, Book, Settings, Plus, ChevronRight, Bell, Download, Share2, AlertCircle, Clock, Heart, Zap, CheckCircle, Trash2, Save, Send, Bot, Palette, Shield, User, Activity, Target, LineChart } from 'lucide-react';
+import { Home, Calendar, Pill, TrendingUp, Book, Settings, Plus, ChevronRight, Bell, Download, Share2, AlertCircle, Clock, Heart, Zap, CheckCircle, Trash2, Save, Send, Bot, Palette, Shield, User, Activity, Target, LineChart, Stethoscope, LogOut } from 'lucide-react';
 import { LineChart as RechartsLineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, AreaChart, Area, BarChart as RechartsBarChart, Bar } from 'recharts';
 import { dataStorage, symptomTracker, medicationManager } from '../utils/storage';
 import { pdfExporter } from '../utils/pdfExport';
+import DoctorDashboard from './DoctorDashboard';
+import LoginPage from './LoginPage';
 
 const ASRedesign = () => {
   const [currentPage, setCurrentPage] = useState('home');
@@ -24,8 +26,12 @@ const ASRedesign = () => {
   const [chatMessages, setChatMessages] = useState([]);
   const [chatInput, setChatInput] = useState('');
   const [medications, setMedications] = useState([]);
+  const [recentMeds, setRecentMeds] = useState([]);
   const [symptomRecords, setSymptomRecords] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [userMode, setUserMode] = useState(null); // 'local', 'sync', 'doctor'
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [patientId, setPatientId] = useState(''); // 患者ID（同步模式用）
 
   // 主题色配置
   const themeColors = {
@@ -107,7 +113,7 @@ const ASRedesign = () => {
       painLevel: '疼痛程度',
       morningStiffness: '晨僵时长',
       fatigue: '疲劳程度',
-      flare: '发作状态',
+      flare: '可能诱因',
       triggers: '可能诱因',
       saveRecord: '保存记录',
       weekSummary: '本周记录',
@@ -157,6 +163,7 @@ const ASRedesign = () => {
       painLabel: '疼痛',
       fatigueLabel: '疲劳',
       stiffnessLabel: '晨僵',
+      painAreas: '疼痛部位',
       aiChat: 'AI助手',
       aiDisclaimer: '⚠️ AI回答仅供参考，请遵循医生建议',
       askAI: '向AI提问',
@@ -224,6 +231,7 @@ const ASRedesign = () => {
       painLabel: 'Pain',
       fatigueLabel: 'Fatigue',
       stiffnessLabel: 'Stiffness',
+      painAreas: 'Pain locations',
       aiChat: 'AI Assistant',
       aiDisclaimer: '⚠️ AI responses are for reference only. Please follow medical advice.',
       askAI: 'Ask AI',
@@ -282,6 +290,71 @@ const ASRedesign = () => {
     }
   ];
 
+  // 用药管理常用选项
+  const commonMedOptions = [
+    { zh: '阿达木单抗 (修美乐)', en: 'Adalimumab (Humira)' },
+    { zh: '依那西普 (恩利)', en: 'Etanercept (Enbrel)' },
+    { zh: '塞来昔布', en: 'Celecoxib' },
+    { zh: '布洛芬', en: 'Ibuprofen' },
+    { zh: '双氯芬酸', en: 'Diclofenac' },
+    { zh: '柳氮磺吡啶', en: 'Sulfasalazine' },
+    { zh: '甲氨蝶呤', en: 'Methotrexate' }
+  ];
+  const commonDosages = ['40mg', '50mg', '200mg', '400mg', '500mg', '10mg', '20mg'];
+  const commonFrequencies = language === 'zh'
+    ? ['每日1次', '每日2次', '每周1次', '每2周', '每月1次']
+    : ['Once daily', 'Twice daily', 'Once weekly', 'Every 2 weeks', 'Once monthly'];
+
+  // 完整用药目录（中文为主），点击后自动填充名称与类型
+  const medCatalog = [
+    {
+      group: 'NSAID',
+      titleZh: '非甾体抗炎药 (NSAID)',
+      items: ['布洛芬', '双氯芬酸', '萘普生', '罗氖昔布', '塞来昔布']
+    },
+    {
+      group: 'TNFi',
+      titleZh: '抗炎生物药 (TNFi)',
+      items: ['修美乐（信迪利单抗）', '类克（英夫利昔单抗）', '希捷隆（阿达木单抗）', '恩利康（依那西普）', '赛博尔（戈利木单抗）']
+    },
+    {
+      group: 'DMARD',
+      titleZh: '抗风湿慢作用药 (DMARD)',
+      items: ['甲氨蝶呤', '硫唑嘌呤', '来氟米特', '环孢霉素', '氯喹']
+    },
+    {
+      group: 'IL17',
+      titleZh: '靶向药物 · IL-17 抑制剂',
+      items: ['司库奇尤单抗', '伊托利单抗', '乌司奴单抗']
+    },
+    {
+      group: 'IL23',
+      titleZh: '靶向药物 · IL-23 抑制剂',
+      items: ['布罗达利单抗', '雷佐利单抗']
+    },
+    {
+      group: 'JAK',
+      titleZh: '靶向药物 · JAK 抑制剂',
+      items: ['托法替布', '巴瑞替布', '乌帕替布']
+    },
+    {
+      group: 'Steroid',
+      titleZh: '皮质类固醇',
+      items: ['泼尼松龙', '地塞米松', '倍他米松']
+    }
+  ];
+
+  // 分组默认剂量/频率建议（中文优先，频率用中文，英文环境仍可手动修改）
+  const medDefaults = {
+    NSAID: { dosage: '200mg', frequency: '每日2次' },
+    TNFi: { dosage: '40mg', frequency: '每2周' },
+    DMARD: { dosage: '10mg', frequency: '每周1次' },
+    IL17: { dosage: '150mg', frequency: '每月1次' },
+    IL23: { dosage: '150mg', frequency: '每月1次' },
+    JAK: { dosage: '5mg', frequency: '每日2次' },
+    Steroid: { dosage: '10mg', frequency: '每日1次' }
+  };
+
   const isDark = theme === 'dark';
   const bgClass = isDark ? 'bg-gray-900' : 'bg-gray-50';
   const cardClass = isDark ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-100';
@@ -291,8 +364,35 @@ const ASRedesign = () => {
 
   // 数据加载和保存
   useEffect(() => {
-    loadAppData();
-  }, []);
+    if (isLoggedIn) {
+      loadAppData();
+    }
+  }, [isLoggedIn]);
+
+  // 处理模式选择
+  const handleModeSelect = (mode, id = '') => {
+    setUserMode(mode);
+    setPatientId(id);
+    setIsLoggedIn(true);
+    
+    // 根据模式设置初始页面
+    if (mode === 'doctor') {
+      setCurrentPage('doctor');
+    } else {
+      setCurrentPage('home');
+    }
+  };
+
+  // 兼容命名：handleRoleSelect -> 复用 handleModeSelect
+  const handleRoleSelect = (mode, id = '') => handleModeSelect(mode, id);
+
+  // 退出登录
+  const handleLogout = () => {
+    setUserMode(null);
+    setPatientId('');
+    setIsLoggedIn(false);
+    setCurrentPage('home');
+  };
 
   // 加载应用数据
   const loadAppData = () => {
@@ -302,6 +402,7 @@ const ASRedesign = () => {
       setTheme(data.settings?.theme || 'light');
       setThemeColor(data.settings?.themeColor || 'blue');
       setMedications(data.medications || []);
+      setRecentMeds(data.medicationRecent || []);
       setSymptomRecords(data.symptoms?.dailyRecords || []);
     } catch (error) {
       console.error('加载数据失败:', error);
@@ -334,6 +435,33 @@ const ASRedesign = () => {
     saveAppData();
   }, [language, theme, themeColor, medications, symptomRecords]);
 
+  // 根据分组应用默认剂量/频率
+  const applyDefaultsForType = (type, prev) => {
+    const defaults = medDefaults[type];
+    if (!defaults) return { ...prev, type };
+    return {
+      ...prev,
+      type,
+      dosage: prev.dosage || defaults.dosage,
+      frequency: prev.frequency || defaults.frequency
+    };
+  };
+
+  // 更新最近使用药物（持久化）
+  const updateRecentMeds = (name, type) => {
+    try {
+      const data = dataStorage.loadData();
+      const list = Array.isArray(data.medicationRecent) ? data.medicationRecent : [];
+      const withoutDup = list.filter(item => !(item.name === name && item.type === type));
+      const updated = [{ name, type, ts: Date.now() }, ...withoutDup].slice(0, 8);
+      data.medicationRecent = updated;
+      dataStorage.saveData(data);
+      setRecentMeds(updated);
+    } catch (e) {
+      console.error('更新最近用药失败', e);
+    }
+  };
+
   // 添加触发器选择逻辑
   const toggleTrigger = (triggerId) => {
     setSelectedTriggers(prev => 
@@ -354,12 +482,23 @@ const ASRedesign = () => {
         frequency: { zh: newMedication.frequency, en: newMedication.frequency },
         nextDose: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString().split('T')[0],
         adherence: 100,
-        sideEffects: { zh: [], en: [] }
+        sideEffects: { zh: [], en: [] },
+        // 新增依从性追踪字段
+        adherenceData: {
+          totalDoses: 0,        // 总应该服药次数
+          takenDoses: 0,        // 实际服药次数
+          missedDoses: 0,       // 漏服次数
+          lateDoses: 0,         // 延迟服药次数
+          lastTaken: null,      // 最后服药时间
+          reminders: [],        // 提醒记录
+          notes: []             // 服药备注
+        }
       };
       
       // 使用真实的数据管理器
       const addedMed = medicationManager.addMedication(newMed);
       setMedications([...medications, addedMed]);
+      updateRecentMeds(newMedication.name, newMedication.type);
       setNewMedication({ name: '', type: 'NSAID', dosage: '', frequency: '' });
       setShowAddMed(false);
     }
@@ -369,6 +508,39 @@ const ASRedesign = () => {
   const handleDeleteMedication = (id) => {
     medicationManager.deleteMedication(id);
     setMedications(medications.filter(med => med.id !== id));
+  };
+
+  // 患者界面：简单的服药记录
+  const recordMedicationTaken = (medicationId) => {
+    const updatedMedications = medications.map(med => {
+      if (med.id === medicationId) {
+        // 患者只需要记录：是否服药、服药时间
+        const adherenceData = med.adherenceData || {
+          totalDoses: 0,
+          takenDoses: 0,
+          lastTaken: null,
+          notes: []
+        };
+        
+        adherenceData.totalDoses += 1;
+        adherenceData.takenDoses += 1;
+        adherenceData.lastTaken = new Date().toISOString();
+        
+        // 患者可以添加备注
+        adherenceData.notes.push({
+          timestamp: new Date().toISOString(),
+          note: '已服药'
+        });
+        
+        return {
+          ...med,
+          adherenceData
+        };
+      }
+      return med;
+    });
+    
+    setMedications(updatedMedications);
   };
 
   // 保存症状记录
@@ -394,6 +566,61 @@ const ASRedesign = () => {
     setSelectedTriggers([]);
     
     alert(language === 'zh' ? '症状记录已保存！' : 'Symptom record saved!');
+  };
+
+  // PDF导出测试函数
+  const testPDFExport = async () => {
+    try {
+      console.log('开始测试PDF导出...');
+      console.log('pdfExporter实例:', pdfExporter);
+      console.log('pdfExporter.doc:', pdfExporter.doc);
+      
+      // 创建测试数据 - 使用与测试页面完全相同的数据结构
+      const testData = {
+        stats: {
+          totalRecords: 1,
+          avgPain: 5,
+          avgStiffness: 30,
+          avgFatigue: 4,
+          flareCount: 1
+        },
+        records: [{
+          painLevel: 5,
+          stiffnessTime: 30,
+          fatigue: 4,
+          isFlare: true,
+          selectedTriggers: ['sleep'],
+          timestamp: new Date().toISOString()
+        }]
+      };
+      
+      console.log('测试数据:', testData);
+      
+      // 使用与测试页面完全相同的逻辑
+      const [{ dataStorage, symptomTracker }, { pdfExporter: testPdfExporter }] = await Promise.all([
+        import('../utils/storage.js'),
+        import('../utils/pdfExport.js')
+      ]);
+      
+      console.log('动态导入成功，testPdfExporter:', testPdfExporter);
+      
+      // 测试PDF导出
+      await testPdfExporter.exportSymptomReport(testData, 'en'); // 使用英文避免中文问题
+      console.log('PDF导出成功，doc对象:', testPdfExporter.doc);
+      
+      // 保存PDF
+      testPdfExporter.savePDF('main_app_test_report.pdf');
+      alert(language === 'zh' ? 'PDF测试导出成功！' : 'PDF test export successful!');
+      
+    } catch (error) {
+      console.error('PDF导出测试失败:', error);
+      console.error('错误详情:', {
+        message: error.message,
+        stack: error.stack,
+        pdfExporter: pdfExporter
+      });
+      alert(language === 'zh' ? `PDF测试失败: ${error.message}` : `PDF test failed: ${error.message}`);
+    }
   };
 
   // 自定义Tooltip组件，确保完全国际化
@@ -469,33 +696,53 @@ const ASRedesign = () => {
     setChatInput('');
   };
 
-  const NavBar = () => (
-    <div className={`fixed bottom-0 left-0 right-0 ${isDark ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'} border-t px-2 py-2 backdrop-blur-lg bg-opacity-95`}>
-      <div className="flex justify-around">
-        {[
+  const NavBar = () => {
+    // 根据模式显示不同的导航项
+    const navItems = userMode === 'doctor' 
+      ? [
+          { id: 'doctor', icon: Stethoscope, label: '患者管理' },
+          { id: 'settings', icon: Settings, label: '设置' }
+        ]
+      : [
           { id: 'home', icon: Home, label: t[language].home },
           { id: 'track', icon: Calendar, label: t[language].track },
           { id: 'meds', icon: Pill, label: t[language].meds },
           { id: 'reports', icon: TrendingUp, label: t[language].reports },
-          { id: 'library', icon: Book, label: t[language].library },
-          { id: 'ai', icon: Bot, label: t[language].aiChat }
-        ].map(({ id, icon: Icon, label }) => (
+          { id: 'library', icon: Book, label: t[language].library }
+        ];
+
+    return (
+      <div className={`fixed bottom-0 left-0 right-0 ${isDark ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'} border-t px-2 py-2 backdrop-blur-lg bg-opacity-95`}>
+        <div className="flex justify-around">
+          {navItems.map(({ id, icon: Icon, label }) => (
+            <button
+              key={id}
+              onClick={() => setCurrentPage(id)}
+              className={`flex flex-col items-center py-2 px-3 rounded-xl transition-all duration-200 ${
+                currentPage === id 
+                  ? `bg-gradient-to-b ${currentTheme.primary} text-white shadow-lg transform scale-105` 
+                  : `${subtextClass} hover:${textClass} hover:bg-gray-100 ${isDark ? 'hover:bg-gray-700' : ''}`
+              }`}
+            >
+              <Icon size={20} />
+              <span className="text-xs mt-1 font-medium">{label}</span>
+            </button>
+          ))}
+        </div>
+        
+        {/* 退出登录按钮 */}
+        <div className="absolute top-2 right-2">
           <button
-            key={id}
-            onClick={() => setCurrentPage(id)}
-            className={`flex flex-col items-center py-2 px-3 rounded-xl transition-all duration-200 ${
-              currentPage === id 
-                ? `bg-gradient-to-b ${currentTheme.primary} text-white shadow-lg transform scale-105` 
-                : `${subtextClass} hover:${textClass} hover:bg-gray-100 ${isDark ? 'hover:bg-gray-700' : ''}`
-            }`}
+            onClick={handleLogout}
+            className="p-2 text-gray-500 hover:text-gray-700 transition-colors"
+            title="退出登录"
           >
-            <Icon size={20} />
-            <span className="text-xs mt-1 font-medium">{label}</span>
+            <LogOut size={16} />
           </button>
-        ))}
+        </div>
       </div>
-    </div>
-  );
+    );
+  };
 
   const HomePage = () => (
     <div className={`p-4 pb-20 space-y-6 ${bgClass} min-h-screen`}>
@@ -704,25 +951,39 @@ const ASRedesign = () => {
         <div className="flex items-center justify-between mb-4">
           <span className={`text-lg font-bold ${textClass} flex items-center`}>
             <AlertCircle className="mr-2 text-orange-500" size={20} />
-            {t[language].flare}
+            {t[language].triggers}
           </span>
-          <button onClick={() => setIsFlare(!isFlare)} className={`px-4 py-2 rounded-full font-medium transition-all duration-200 ${isFlare ? 'bg-gradient-to-r from-red-500 to-orange-500 text-white shadow-lg' : `${isDark ? 'bg-gray-700 text-gray-300' : 'bg-gray-100 text-gray-700'}`}`}>
-            {isFlare ? (language === 'zh' ? '正在发作 ⚡' : 'Flaring ⚡') : (language === 'zh' ? '无发作' : 'No flare')}
-          </button>
         </div>
-        {isFlare && (
-          <div className="mt-4 p-4 bg-gradient-to-r from-red-50 to-orange-50 rounded-xl border border-red-100">
-            <h4 className={`font-semibold mb-3 ${textClass}`}>{t[language].triggers}</h4>
-            <div className="grid grid-cols-3 gap-2">
-              {triggers.map((trigger) => (
-                <button key={trigger.id} onClick={() => toggleTrigger(trigger.id)} className={`flex flex-col items-center p-3 rounded-xl transition-all duration-200 ${selectedTriggers.includes(trigger.id) ? 'bg-blue-500 text-white shadow-lg transform scale-105' : `${isDark ? 'bg-gray-700' : 'bg-white'} hover:bg-blue-50 hover:shadow-md`}`}>
-                  <span className="text-2xl mb-1">{trigger.icon}</span>
-                  <span className="text-xs text-center font-medium">{trigger.label[language]}</span>
-                </button>
-              ))}
+        <div className="grid grid-cols-3 gap-2">
+          {triggers.map((trigger) => (
+            <button key={trigger.id} onClick={() => toggleTrigger(trigger.id)} className={`flex flex-col items-center p-3 rounded-xl transition-all duration-200 ${selectedTriggers.includes(trigger.id) ? 'bg-blue-500 text-white shadow-lg transform scale-105' : `${isDark ? 'bg-gray-700' : 'bg-white'} hover:bg-blue-50 hover:shadow-md`}`}>
+              <span className="text-2xl mb-1">{trigger.icon}</span>
+              <span className="text-xs text-center font-medium">{trigger.label[language]}</span>
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* 疼痛部位 */}
+      <div className={`${cardClass} rounded-2xl p-6 shadow-sm border`}>
+        <h3 className={`text-lg font-bold ${textClass} mb-4`}>{t[language].painAreas}</h3>
+        <div className="grid grid-cols-3 gap-2">
+          {[
+            { id: 'leg', label: { zh: '腿部', en: 'Legs' }, icon: '🦵' },
+            { id: 'foot', label: { zh: '脚部', en: 'Feet' }, icon: '🦶' },
+            { id: 'chest', label: { zh: '胸部', en: 'Chest' }, icon: '🫁' },
+            { id: 'head', label: { zh: '头部', en: 'Head' }, icon: '🤕' },
+            { id: 'spine', label: { zh: '背部/脊椎', en: 'Back/Spine' }, icon: '🦴' },
+            { id: 'arm', label: { zh: '手臂', en: 'Arms' }, icon: '💪' },
+            { id: 'waist', label: { zh: '腰部', en: 'Waist' }, icon: '🫃' },
+            { id: 'neck', label: { zh: '颈部', en: 'Neck' }, icon: '🦲' }
+          ].map(area => (
+            <div key={area.id} className={`flex flex-col items-center p-3 rounded-xl ${isDark ? 'bg-gray-700' : 'bg-white'} border hover:shadow-md`}>
+              <span className="text-2xl mb-1">{area.icon}</span>
+              <span className="text-xs text-center font-medium">{area.label[language]}</span>
             </div>
-          </div>
-        )}
+          ))}
+        </div>
       </div>
       <button 
         onClick={saveSymptomRecord}
@@ -765,18 +1026,7 @@ const ASRedesign = () => {
                 <div className={`h-2 rounded-full ${med.adherence >= 90 ? 'bg-green-500' : 'bg-orange-500'}`} style={{ width: `${med.adherence}%` }}></div>
               </div>
             </div>
-            <div className="mb-4">
-              <span className={`text-sm font-medium ${textClass} block mb-2`}>{t[language].sideEffects}</span>
-              {med.sideEffects[language].length > 0 ? (
-                <div className="flex flex-wrap gap-2">
-                  {med.sideEffects[language].map((effect, index) => (
-                    <span key={index} className="px-2 py-1 bg-red-100 text-red-700 text-xs rounded-full">{effect}</span>
-                  ))}
-                </div>
-              ) : (
-                <span className={`text-xs ${subtextClass}`}>{t[language].noSideEffects}</span>
-              )}
-            </div>
+            {/* 去掉副作用显示 */}
             <div className="flex gap-3">
               <button 
                 onClick={() => {
@@ -816,16 +1066,54 @@ const ASRedesign = () => {
           <div className="space-y-4">
             <div>
               <label className={`block text-sm font-medium ${textClass} mb-2`}>{t[language].medicationName}</label>
+              <div className="grid grid-cols-2 gap-2 mb-2">
+                {commonMedOptions.slice(0,4).map((opt, idx) => (
+                  <button key={idx}
+                    onClick={() => setNewMedication(prev => ({...prev, name: language==='zh'? opt.zh : opt.en }))}
+                    className={`px-2 py-2 rounded-lg text-sm ${isDark ? 'bg-gray-700 hover:bg-gray-600' : 'bg-gray-100 hover:bg-gray-200'}`}
+                  >{language==='zh'? opt.zh : opt.en}</button>
+                ))}
+              </div>
+              {/* 最近使用快捷项 */}
+              {recentMeds.length > 0 && (
+                <div className="mb-3">
+                  <div className={`text-xs font-semibold mb-2 ${subtextClass}`}>{language==='zh'?'最近使用':'Recent used'}</div>
+                  <div className="grid grid-cols-2 gap-2">
+                    {recentMeds.map((item, idx) => (
+                      <button key={idx}
+                        onClick={() => setNewMedication(prev => applyDefaultsForType(item.type, { ...prev, name: item.name }))}
+                        className={`px-2 py-2 rounded-lg text-sm text-left ${isDark ? 'bg-gray-700 hover:bg-gray-600' : 'bg-gray-100 hover:bg-gray-200'}`}
+                      >{item.name} <span className="text-xs opacity-70">· {item.type}</span></button>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* 完整目录选择 */}
+              <details className={`${isDark ? 'bg-gray-700' : 'bg-gray-50'} rounded-lg p-3 border mb-2`}>
+                <summary className={`cursor-pointer ${textClass} text-sm font-medium`}>{language==='zh' ? '展开完整用药目录（点击可快速选择）' : 'Open full medication catalog'}</summary>
+                <div className="mt-3 space-y-3 max-h-64 overflow-y-auto pr-1">
+                  {medCatalog.map(section => (
+                    <div key={section.group}>
+                      <div className={`text-xs font-semibold mb-2 ${subtextClass}`}>{section.titleZh}</div>
+                      <div className="grid grid-cols-2 gap-2">
+                        {section.items.map((name, i) => (
+                          <button key={i}
+                            onClick={() => setNewMedication(prev => applyDefaultsForType(section.group, { ...prev, name }))}
+                            className={`px-2 py-2 rounded-lg text-sm text-left ${isDark ? 'bg-gray-800 hover:bg-gray-700' : 'bg-white hover:bg-gray-100'} border`}
+                          >{name}</button>
+                        ))}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </details>
               <input
                 type="text"
                 value={newMedication.name}
-                onChange={(e) => {
-                  const value = e.target.value;
-                  console.log('药物名称输入:', value);
-                  setNewMedication(prev => ({...prev, name: value}));
-                }}
+                onChange={(e) => setNewMedication(prev => ({...prev, name: e.target.value}))}
                 className={`w-full px-3 py-2 border rounded-lg ${isDark ? 'bg-gray-700 border-gray-600' : 'bg-white border-gray-300'} focus:outline-none focus:ring-2 focus:ring-blue-500`}
-                placeholder={language === 'zh' ? '输入药物名称' : 'Enter medication name'}
+                placeholder={language === 'zh' ? '或输入其他药物名称' : 'Or type another medication'}
               />
             </div>
             <div>
@@ -835,41 +1123,47 @@ const ASRedesign = () => {
                 onChange={(e) => {
                   const value = e.target.value;
                   console.log('药物类型选择:', value);
-                  setNewMedication(prev => ({...prev, type: value}));
+                  setNewMedication(prev => applyDefaultsForType(value, prev));
                 }}
                 className={`w-full px-3 py-2 border rounded-lg ${isDark ? 'bg-gray-700 border-gray-600' : 'bg-white border-gray-300'} focus:outline-none focus:ring-2 focus:ring-blue-500`}
               >
                 <option value="NSAID">NSAID</option>
                 <option value="TNFi">TNFi</option>
                 <option value="DMARD">DMARD</option>
+                <option value="IL17">IL-17</option>
+                <option value="IL23">IL-23</option>
+                <option value="JAK">JAK</option>
+                <option value="Steroid">Steroid</option>
                 <option value="Other">Other</option>
               </select>
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <label className={`block text-sm font-medium ${textClass} mb-2`}>{t[language].dosage}</label>
+                <div className="grid grid-cols-3 gap-2 mb-2">
+                  {commonDosages.slice(0,6).map((d, i) => (
+                    <button key={i} onClick={() => setNewMedication(prev => ({...prev, dosage: d}))} className={`px-2 py-2 rounded-lg text-sm ${isDark ? 'bg-gray-700 hover:bg-gray-600' : 'bg-gray-100 hover:bg-gray-200'}`}>{d}</button>
+                  ))}
+                </div>
                 <input
                   type="text"
                   value={newMedication.dosage}
-                  onChange={(e) => {
-                    const value = e.target.value;
-                    console.log('剂量输入:', value);
-                    setNewMedication(prev => ({...prev, dosage: value}));
-                  }}
+                  onChange={(e) => setNewMedication(prev => ({...prev, dosage: e.target.value}))}
                   className={`w-full px-3 py-2 border rounded-lg ${isDark ? 'bg-gray-700 border-gray-600' : 'bg-white border-gray-300'} focus:outline-none focus:ring-2 focus:ring-blue-500`}
                   placeholder={language === 'zh' ? '如：200mg' : 'e.g., 200mg'}
                 />
               </div>
               <div>
                 <label className={`block text-sm font-medium ${textClass} mb-2`}>{t[language].frequency}</label>
+                <div className="grid grid-cols-2 gap-2 mb-2">
+                  {commonFrequencies.map((f, i) => (
+                    <button key={i} onClick={() => setNewMedication(prev => ({...prev, frequency: f}))} className={`px-2 py-2 rounded-lg text-sm ${isDark ? 'bg-gray-700 hover:bg-gray-600' : 'bg-gray-100 hover:bg-gray-200'}`}>{f}</button>
+                  ))}
+                </div>
                 <input
                   type="text"
                   value={newMedication.frequency}
-                  onChange={(e) => {
-                    const value = e.target.value;
-                    console.log('频率输入:', value);
-                    setNewMedication(prev => ({...prev, frequency: value}));
-                  }}
+                  onChange={(e) => setNewMedication(prev => ({...prev, frequency: e.target.value}))}
                   className={`w-full px-3 py-2 border rounded-lg ${isDark ? 'bg-gray-700 border-gray-600' : 'bg-white border-gray-300'} focus:outline-none focus:ring-2 focus:ring-blue-500`}
                   placeholder={language === 'zh' ? '如：每日2次' : 'e.g., Twice daily'}
                 />
@@ -934,13 +1228,19 @@ const ASRedesign = () => {
                   records: symptomRecords.slice(-30) // 最近30条记录
                 };
                 
-                await pdfExporter.exportSymptomReport(symptomData, language);
-                pdfExporter.savePDF(`as_symptom_report_${new Date().toISOString().split('T')[0]}.pdf`);
+                // 使用动态导入确保PDF导出器正确加载
+                const { pdfExporter: dynamicPdfExporter } = await import('../utils/pdfExport.js');
+                await dynamicPdfExporter.exportSymptomReport(symptomData, language);
+                dynamicPdfExporter.savePDF(`as_symptom_report_${new Date().toISOString().split('T')[0]}.pdf`);
                 
                 alert(language === 'zh' ? 'PDF报告导出成功！' : 'PDF report exported successfully!');
               } catch (error) {
-                console.error('导出失败:', error);
-                alert(language === 'zh' ? '导出失败，请重试' : 'Export failed, please try again');
+                console.error('PDF导出失败:', error);
+                console.error('错误详情:', {
+                  message: error.message,
+                  stack: error.stack
+                });
+                alert(language === 'zh' ? `导出失败: ${error.message}` : `Export failed: ${error.message}`);
               } finally {
                 setIsLoading(false);
               }
@@ -972,12 +1272,13 @@ const ASRedesign = () => {
                   records: symptomRecords.slice(-30)
                 };
                 
-                // 生成PDF报告
-                await pdfExporter.exportSymptomReport(symptomData, language);
+                // 生成PDF报告 - 使用动态导入
+                const { pdfExporter: dynamicPdfExporter } = await import('../utils/pdfExport.js');
+                await dynamicPdfExporter.exportSymptomReport(symptomData, language);
                 
                 // 尝试使用原生分享API
                 if (navigator.share) {
-                  const pdfBlob = pdfExporter.doc.output('blob');
+                  const pdfBlob = dynamicPdfExporter.doc.output('blob');
                   const pdfFile = new File([pdfBlob], `as_health_report_${new Date().toISOString().split('T')[0]}.pdf`, {
                     type: 'application/pdf'
                   });
@@ -989,7 +1290,7 @@ const ASRedesign = () => {
                   });
                 } else {
                   // 回退到下载
-                  pdfExporter.savePDF(`as_health_report_${new Date().toISOString().split('T')[0]}.pdf`);
+                  dynamicPdfExporter.savePDF(`as_health_report_${new Date().toISOString().split('T')[0]}.pdf`);
                   alert(language === 'zh' ? '报告已下载，请手动分享' : 'Report downloaded, please share manually');
                 }
               } catch (error) {
@@ -1099,12 +1400,18 @@ const ASRedesign = () => {
                 data.userProfile = { name: '', age: '', diagnosisDate: '', currentMedications: [] };
               }
               
-              await pdfExporter.exportFullHealthReport(data, language);
-              pdfExporter.savePDF(`as_complete_health_report_${new Date().toISOString().split('T')[0]}.pdf`);
+              // 使用动态导入确保PDF导出器正确加载
+              const { pdfExporter: dynamicPdfExporter } = await import('../utils/pdfExport.js');
+              await dynamicPdfExporter.exportFullHealthReport(data, language);
+              dynamicPdfExporter.savePDF(`as_complete_health_report_${new Date().toISOString().split('T')[0]}.pdf`);
               alert(language === 'zh' ? '完整健康报告导出成功！' : 'Complete health report exported successfully!');
             } catch (error) {
-              console.error('导出失败:', error);
-              alert(language === 'zh' ? '导出失败，请重试' : 'Export failed, please try again');
+              console.error('完整健康报告导出失败:', error);
+                              console.error('错误详情:', {
+                  message: error.message,
+                  stack: error.stack
+                });
+              alert(language === 'zh' ? `导出失败: ${error.message}` : `Export failed: ${error.message}`);
             } finally {
               setIsLoading(false);
             }
@@ -1139,10 +1446,12 @@ const ASRedesign = () => {
                 records: symptomRecords.slice(-30)
               };
               
-              await pdfExporter.exportSymptomReport(symptomData, language);
+              // 使用动态导入确保PDF导出器正确加载
+              const { pdfExporter: dynamicPdfExporter } = await import('../utils/pdfExport.js');
+              await dynamicPdfExporter.exportSymptomReport(symptomData, language);
               
               if (navigator.share) {
-                const pdfBlob = pdfExporter.doc.output('blob');
+                const pdfBlob = dynamicPdfExporter.doc.output('blob');
                 const pdfFile = new File([pdfBlob], `as_health_report_${new Date().toISOString().split('T')[0]}.pdf`, {
                   type: 'application/pdf'
                 });
@@ -1153,7 +1462,7 @@ const ASRedesign = () => {
                   files: [pdfFile]
                 });
               } else {
-                pdfExporter.savePDF(`as_health_report_${new Date().toISOString().split('T')[0]}.pdf`);
+                dynamicPdfExporter.savePDF(`as_health_report_${new Date().toISOString().split('T')[0]}.pdf`);
                 alert(language === 'zh' ? '报告已下载，请手动分享' : 'Report downloaded, please share manually');
               }
             } catch (error) {
@@ -1398,8 +1707,11 @@ const ASRedesign = () => {
       <div className={`${cardClass} rounded-2xl p-6 shadow-sm border`}>
         <h3 className={`text-lg font-bold ${textClass} mb-4 flex items-center`}><Shield className="mr-2 text-green-500" size={20} />{t[language].privacy}</h3>
         <div className="space-y-4">
-          <button className={`w-full text-left p-3 ${isDark ? 'bg-gray-700 hover:bg-gray-600' : 'bg-gray-50 hover:bg-gray-100'} rounded-xl transition-colors flex items-center justify-between`}>
-            <span className={`${textClass} font-medium`}>{t[language].dataExport}</span>
+          <button 
+            onClick={testPDFExport}
+            className={`w-full text-left p-3 ${isDark ? 'bg-gray-700 hover:bg-gray-600' : 'bg-gray-50 hover:bg-gray-100'} rounded-xl transition-colors flex items-center justify-between`}
+          >
+            <span className={`${textClass} font-medium`}>PDF导出</span>
             <ChevronRight className={`${subtextClass}`} size={16} />
           </button>
           <button className={`w-full text-left p-3 ${isDark ? 'bg-gray-700 hover:bg-gray-600' : 'bg-gray-50 hover:bg-gray-100'} rounded-xl transition-colors flex items-center justify-between`}>
@@ -1439,14 +1751,19 @@ const ASRedesign = () => {
       case 'meds': return <MedsPage />;
       case 'reports': return <ReportsPage />;
       case 'library': return <LibraryPage />;
-      case 'ai': return <AIChatPage />;
+      case 'doctor': return <DoctorDashboard />;
       case 'settings': return <SettingsPage />;
       default: return <HomePage />;
     }
   };
 
+  // 如果未登录，显示登录页面
+  if (!isLoggedIn) {
+    return <LoginPage onRoleSelect={handleRoleSelect} />;
+  }
+
   return (
-    <div className={`max-w-md mx-auto ${bgClass} min-h-screen transition-colors duration-300`}>
+    <div className={`max-w-md mx-auto ${bgClass} min-h-screen pb-24 transition-colors duration-300`}>
       {renderPage()}
       <NavBar />
     </div>
