@@ -77,11 +77,29 @@ const TestStorage = () => {
     try {
       setMessage('🔄 正在生成PDF...');
       
-      const data = dataStorage.loadData();
-      const symptomData = {
-        stats: symptomTracker.getSymptomStats(),
-        records: data.symptoms?.dailyRecords || []
+      // 先添加一些测试数据
+      const testRecord = {
+        painLevel: 5,
+        stiffnessTime: 45,
+        fatigue: 4,
+        isFlare: true,
+        selectedTriggers: ['sleep', 'stress'],
+        timestamp: new Date().toISOString()
       };
+      
+      // 添加测试症状记录
+      symptomTracker.addSymptomRecord(testRecord);
+      
+      // 获取症状统计
+      const stats = symptomTracker.getSymptomStats();
+      console.log('症状统计:', stats);
+      
+      const symptomData = {
+        stats: stats,
+        records: [testRecord] // 使用刚添加的记录
+      };
+      
+      console.log('PDF导出数据:', symptomData);
       
       await pdfExporter.exportSymptomReport(symptomData, 'zh');
       pdfExporter.savePDF('test_report.pdf');
@@ -89,6 +107,8 @@ const TestStorage = () => {
       setMessage('✅ PDF导出成功！');
     } catch (error) {
       setMessage(`❌ PDF导出错误: ${error.message}`);
+      console.error('PDF导出详细错误:', error);
+      console.error('错误堆栈:', error.stack);
     }
   };
 

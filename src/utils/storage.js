@@ -8,11 +8,16 @@ export class DataStorage {
   // 保存数据到localStorage
   saveData(data) {
     try {
+      // 确保数据结构完整
+      const completeData = this.ensureDataStructure(data);
+      
       const dataToSave = {
-        ...data,
+        ...completeData,
         version: this.version,
         lastUpdated: new Date().toISOString()
       };
+      
+      console.log('保存数据:', dataToSave);
       localStorage.setItem(this.storageKey, JSON.stringify(dataToSave));
       return true;
     } catch (error) {
@@ -29,7 +34,8 @@ export class DataStorage {
         const parsedData = JSON.parse(savedData);
         // 检查版本兼容性
         if (parsedData.version === this.version) {
-          return parsedData;
+          // 确保数据结构完整
+          return this.ensureDataStructure(parsedData);
         } else {
           // 版本不匹配，返回默认数据
           console.warn('数据版本不匹配，使用默认数据');
@@ -94,6 +100,36 @@ export class DataStorage {
           medicationReminders: true,
           symptomTracking: true
         }
+      }
+    };
+  }
+
+  // 确保数据结构完整
+  ensureDataStructure(data) {
+    const defaultData = this.getDefaultData();
+    
+    return {
+      ...defaultData,
+      ...data,
+      symptoms: {
+        ...defaultData.symptoms,
+        ...data.symptoms,
+        dailyRecords: data.symptoms?.dailyRecords || defaultData.symptoms.dailyRecords,
+        weeklyTrends: data.symptoms?.weeklyTrends || defaultData.symptoms.weeklyTrends,
+        monthlyReports: data.symptoms?.monthlyReports || defaultData.symptoms.monthlyReports
+      },
+      medications: data.medications || defaultData.medications,
+      education: {
+        ...defaultData.education,
+        ...data.education
+      },
+      userProfile: {
+        ...defaultData.userProfile,
+        ...data.userProfile
+      },
+      settings: {
+        ...defaultData.settings,
+        ...data.settings
       }
     };
   }
@@ -229,10 +265,38 @@ export class SymptomTracker {
 
   // 获取症状统计
   getSymptomStats() {
-    const data = this.storage.loadData();
-    const records = data.symptoms.dailyRecords;
-    
-    if (records.length === 0) {
+    try {
+      const data = this.storage.loadData();
+      
+      // 确保数据结构完整
+      if (!data.symptoms) {
+        data.symptoms = { dailyRecords: [] };
+      }
+      if (!data.symptoms.dailyRecords) {
+        data.symptoms.dailyRecords = [];
+      }
+      
+      const records = data.symptoms.dailyRecords;
+      
+      if (!records || records.length === 0) {
+        return {
+          totalRecords: 0,
+          avgPain: 0,
+          avgStiffness: 0,
+          avgFatigue: 0,
+          flareCount: 0
+        };
+      }
+
+      return {
+        totalRecords: records.length,
+        avgPain: this.calculateAverage(records, 'painLevel'),
+        avgStiffness: this.calculateAverage(records, 'stiffnessTime'),
+        avgFatigue: this.calculateAverage(records, 'fatigue'),
+        flareCount: records.filter(r => r.isFlare).length
+      };
+    } catch (error) {
+      console.error('获取症状统计失败:', error);
       return {
         totalRecords: 0,
         avgPain: 0,
@@ -241,14 +305,6 @@ export class SymptomTracker {
         flareCount: 0
       };
     }
-
-    return {
-      totalRecords: records.length,
-      avgPain: this.calculateAverage(records, 'painLevel'),
-      avgStiffness: this.calculateAverage(records, 'stiffnessTime'),
-      avgFatigue: this.calculateAverage(records, 'fatigue'),
-      flareCount: records.filter(r => r.isFlare).length
-    };
   }
 }
 

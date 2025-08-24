@@ -920,6 +920,15 @@ const ASRedesign = () => {
               setIsLoading(true);
               try {
                 const data = dataStorage.loadData();
+                
+                // 确保数据结构完整
+                if (!data.symptoms) {
+                  data.symptoms = { dailyRecords: [] };
+                }
+                if (!data.symptoms.dailyRecords) {
+                  data.symptoms.dailyRecords = [];
+                }
+                
                 const symptomData = {
                   stats: symptomTracker.getSymptomStats(),
                   records: symptomRecords.slice(-30) // 最近30条记录
@@ -949,6 +958,15 @@ const ASRedesign = () => {
             onClick={async () => {
               try {
                 const data = dataStorage.loadData();
+                
+                // 确保数据结构完整
+                if (!data.symptoms) {
+                  data.symptoms = { dailyRecords: [] };
+                }
+                if (!data.symptoms.dailyRecords) {
+                  data.symptoms.dailyRecords = [];
+                }
+                
                 const symptomData = {
                   stats: symptomTracker.getSymptomStats(),
                   records: symptomRecords.slice(-30)
@@ -1063,6 +1081,24 @@ const ASRedesign = () => {
             setIsLoading(true);
             try {
               const data = dataStorage.loadData();
+              
+              // 确保数据结构完整
+              if (!data.symptoms) {
+                data.symptoms = { dailyRecords: [] };
+              }
+              if (!data.symptoms.dailyRecords) {
+                data.symptoms.dailyRecords = [];
+              }
+              if (!data.medications) {
+                data.medications = [];
+              }
+              if (!data.education) {
+                data.education = { completedCourses: [], bookmarks: [], notes: [] };
+              }
+              if (!data.userProfile) {
+                data.userProfile = { name: '', age: '', diagnosisDate: '', currentMedications: [] };
+              }
+              
               await pdfExporter.exportFullHealthReport(data, language);
               pdfExporter.savePDF(`as_complete_health_report_${new Date().toISOString().split('T')[0]}.pdf`);
               alert(language === 'zh' ? '完整健康报告导出成功！' : 'Complete health report exported successfully!');
@@ -1089,6 +1125,15 @@ const ASRedesign = () => {
           onClick={async () => {
             try {
               const data = dataStorage.loadData();
+              
+              // 确保数据结构完整
+              if (!data.symptoms) {
+                data.symptoms = { dailyRecords: [] };
+              }
+              if (!data.symptoms.dailyRecords) {
+                data.symptoms.dailyRecords = [];
+              }
+              
               const symptomData = {
                 stats: symptomTracker.getSymptomStats(),
                 records: symptomRecords.slice(-30)
